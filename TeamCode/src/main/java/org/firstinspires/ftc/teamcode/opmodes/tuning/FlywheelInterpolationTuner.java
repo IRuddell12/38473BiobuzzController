@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
-@TeleOp(name = "Interpolation Tuner")
+@TeleOp(name = "Interpolation Tuner", group = "Tuning")
 public class FlywheelInterpolationTuner extends OpMode {
 
     Shooter shooter = new Shooter();

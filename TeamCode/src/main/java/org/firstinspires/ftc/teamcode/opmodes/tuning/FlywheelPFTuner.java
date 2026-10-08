@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
 //@Disabled
-@TeleOp(name = "Flywheel Constants Tuner")
+@TeleOp(name = "Flywheel Constants Tuner", group = "Tuning")
 
 public class FlywheelPFTuner extends OpMode {
 
