@@ -15,7 +15,7 @@ public class Shooter {
     double F = 13;
     double P = 150;
 
-    private ElapsedTime stateTimer = new ElapsedTime();
+    private final ElapsedTime stateTimer = new ElapsedTime();
 
     private enum FlywheelState {
         IDLE,

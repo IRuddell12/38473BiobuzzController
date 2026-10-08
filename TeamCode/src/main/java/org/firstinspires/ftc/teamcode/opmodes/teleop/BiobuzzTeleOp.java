@@ -24,15 +24,12 @@ public class BiobuzzTeleOp extends OpMode {
     //public static Pose startingPoseBlue;
     private  final PoseFactory p = PoseFactory.degrees();
 
-    private final Pose startPose = p.of(55.54, 8.11, 90);
+    private final Pose manualStartPose = p.of(55.54, 8.11, 90);
     private boolean automatedDrive = false;
-    //private TelemetryManager telemetryM;
 
     double flywheelOffset = 0;
     double targetAngleOffset = 0;
     double kP = 0.4; // proportional constant, tune this
-
-    Pose manualStart = new Pose(55.54, 8.11, Math.toRadians(90));
 
 
     @Override
@@ -44,16 +41,17 @@ public class BiobuzzTeleOp extends OpMode {
         flywheel.init(hardwareMap);
         automatedDrive = false;
 
-        /*if (startingPoseBlue != null) {
+        /*TODO
+        if (startingPoseAuto != null) {
             follower.setStartingPose(startingPoseBlue);
         } else {
             follower.setStartingPose(manualStart);
         }*/
 
-        //flywheel.setGatePosition(0.5);
+        flywheel.setGatePosition(0.5);
 
         //telemetry.addData("Initialization Complete, Robot Pose after Auto = ", startingPoseBlue);
-        telemetry.addData("Initialization Complete, Robot Pose = ", manualStart);
+        telemetry.addData("Initialization Complete, Robot Pose = ", manualStartPose);
     }
 
     @Override
