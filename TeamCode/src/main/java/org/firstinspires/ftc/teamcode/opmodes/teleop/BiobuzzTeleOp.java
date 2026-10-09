@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 //import org.firstinspires.ftc.teamcode.mechanisms.HoodAdjuster;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
+import org.firstinspires.ftc.teamcode.pedro.PoseHolder;
 
 //@Disabled
 @TeleOp(name = "Tele-Op")
@@ -34,24 +35,21 @@ public class BiobuzzTeleOp extends OpMode {
 
     @Override
     public void init() {
-        //-----------SETS STARTING POSE-------------
         follower = Constants.create(hardwareMap);
+
+        if (PoseHolder.savedPose != null) {
+            follower.setPose(PoseHolder.savedPose);
+        } else {
+            follower.setPose(manualStartPose);
+        }
+
         intake.init(hardwareMap);
-        //hood.init(hardwareMap);
         flywheel.init(hardwareMap);
         automatedDrive = false;
 
-        /*TODO
-        if (startingPoseAuto != null) {
-            follower.setStartingPose(startingPoseBlue);
-        } else {
-            follower.setStartingPose(manualStart);
-        }*/
-
         flywheel.setGatePosition(0.5);
 
-        //telemetry.addData("Initialization Complete, Robot Pose after Auto = ", startingPoseBlue);
-        telemetry.addData("Initialization Complete, Robot Pose = ", manualStartPose);
+        telemetry.addData("Starting Pose", PoseHolder.savedPose != null ? "Restored from Autonomous" : "Manual Start Pose");
     }
 
     @Override

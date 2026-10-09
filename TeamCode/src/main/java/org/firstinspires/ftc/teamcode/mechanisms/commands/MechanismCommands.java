@@ -7,6 +7,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.Probe;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.ivy.Command;
 
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.mechanisms.LimelightVision;
+
 
 //-----------------------SHOOTER COMMANDS-----------------------------
 
@@ -80,6 +83,36 @@ public class MechanismCommands {
                 .requiring(intake);
     }
 
+//--------------------------LIMELIGHT COMMANDS----------------------------
 
-   // public static Command setTeleOpPose(Follower follower)
+
+    public static Command shootWhenRedCellScorable(
+            Shooter shooter,
+            LimelightVision vision,
+            int numberOfShots,
+            double timeoutSeconds) {
+
+        ElapsedTime timer = new ElapsedTime();
+        boolean[] fired = {false};
+
+        return Command.build()
+                .setStart(() -> {
+                    fired[0] = false;
+                    timer.reset();
+                })
+                .setExecute(() -> {
+                    if (!fired[0]
+                            && vision.seesRedTag()
+                            && vision.isScorable()
+                            && !shooter.isBusy()) {
+
+                        shooter.fireShots(numberOfShots);
+                        fired[0] = true;
+                    }
+                })
+                .setDone(() ->
+                        (fired[0] && shooter.isDoneShooting())
+                                || timer.seconds() >= timeoutSeconds)
+                .requiring(shooter);
+    }
 }

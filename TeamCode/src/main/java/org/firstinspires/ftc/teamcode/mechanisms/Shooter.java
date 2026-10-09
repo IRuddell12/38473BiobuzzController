@@ -33,7 +33,8 @@ public class Shooter {
     //---------FLYWHEEL CONSTANTS----------
     private int shotsRemaining = 0;
     private double flywheelVelocity = 0;
-    private double targetShootingRPM = 1900;
+    private double targetShootingVelocity = 1900;
+    private double restingFlywheelVelocity = 1000;
     private double flywheelMaxSpinupTime = .25;
 
     //---------THROUGHPUT CONSTANTS----------
@@ -64,10 +65,10 @@ public class Shooter {
             case IDLE:
                 intake.runIntake(0.5);
                 gate.setPosition(gateCloseAngle);
-                flywheel.setVelocity(targetShootingRPM); //set velocity
+                flywheel.setVelocity(targetShootingVelocity); //set velocity
 
                 if (shotsRemaining > 0) {
-                    flywheel.setVelocity(targetShootingRPM);
+                    flywheel.setVelocity(targetShootingVelocity);
                     stateTimer.reset();
                     flywheelState = FlywheelState.SPIN_UP;
                 }
@@ -75,43 +76,43 @@ public class Shooter {
 
             case SPIN_UP:
                 //set velocity
-                flywheel.setVelocity(targetShootingRPM);
+                flywheel.setVelocity(targetShootingVelocity);
                 intake.runIntake(1.0);
 
-                if (flywheelVelocity > (targetShootingRPM * .95) || (stateTimer.seconds() > flywheelMaxSpinupTime)) {
+                if (flywheelVelocity > (targetShootingVelocity * .95) || (stateTimer.seconds() > flywheelMaxSpinupTime)) {
                     intake.runIntake(1.0);
                     stateTimer.reset();
                     flywheelState = flywheelState.FEEDING;
                 }
                 break;
 
+
             case FEEDING:
                 gate.setPosition(gateOpenAngle);
 
-                // If more than 1 shot left, keep running loader and wait feedTime
                 if (shotsRemaining > 0) {
                     intake.runIntake(1.0);
                     intake.runFeeder(1);
+
                     if (stateTimer.seconds() > shotFeedTime) {
                         shotsRemaining--;
                         stateTimer.reset();
-                        flywheelState = FlywheelState.SPIN_UP; // next shot
+
+                        if (shotsRemaining > 0) {
+                            flywheelState = FlywheelState.SPIN_UP;
+                        } else {
+                            flywheelState = FlywheelState.SHUTDOWN;
+                        }
                     }
-                }
-                // If this is the last shot, skip feedTime, go directly to LAST_SHOT
-                else if (shotsRemaining <= 0) {
-                    intake.runIntake(0.5); // stop loader for last shot
-                    intake.runFeeder(0);
-                    stateTimer.reset(); // reset timer for LAST_SHOT
                 }
                 break;
 
             case SHUTDOWN:
+                gate.setPosition(gateCloseAngle);
                 intake.runIntake(0.5);
                 intake.runFeeder(0);
 
                 if (stateTimer.seconds() > 0.2) {
-                    flywheel.setVelocity(0); // idle speed
                     flywheelState = FlywheelState.IDLE;
                 }
                 break;
