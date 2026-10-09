@@ -38,7 +38,7 @@ public class Shooter {
     private double flywheelMaxSpinupTime = .25;
 
     //---------THROUGHPUT CONSTANTS----------
-    private double shotFeedTime = .2; // tune this
+    private double shotFeedTime = .5; // tune this
 
 
     public void init(HardwareMap hwMap) {

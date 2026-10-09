@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.mechanisms.commands;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
-import org.firstinspires.ftc.teamcode.mechanisms.Probe;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.ivy.Command;
@@ -13,7 +12,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.LimelightVision;
 
 //-----------------------SHOOTER COMMANDS-----------------------------
 
-public class MechanismCommands {
+public class Commands {
 
     // Fires a specified number of shots
     public static Command shoot(Shooter shooter, int numberOfShots) {
@@ -55,11 +54,11 @@ public class MechanismCommands {
 
 //-----------------------PROBE COMMANDS-------------------------------
 
-    public static Command setProbe(Probe probe, int position) {
+    public static Command setProbe(Intake intake, int position) {
         return Command.build()
-                .setStart(() -> probe.setProbe(position))
-                .setExecute(() -> probe.setProbe(position))
-                .requiring(probe);
+                .setStart(() -> intake.setProbe(position))
+                .setExecute(() -> intake.setProbe(position))
+                .requiring(intake);
     }
 
 //------------------SPECIAL AUTO COMMANDS-----------------------------
@@ -67,15 +66,14 @@ public class MechanismCommands {
     public static Command runAtProgress(
             Follower follower,
             Intake intake,
-            Probe probe,
-            double intakePower,
             double progressThreshold,
+            double intakePower,
             int probeValue
     ) {
         return Command.build()
                 .setExecute(() -> {
                     if (follower.completion() >= progressThreshold) {
-                        probe.setProbe(probeValue);
+                        intake.setProbe(probeValue);
                         intake.runIntake(intakePower);
                     }
                 })
@@ -86,33 +84,26 @@ public class MechanismCommands {
 //--------------------------LIMELIGHT COMMANDS----------------------------
 
 
-    public static Command shootWhenRedCellScorable(
-            Shooter shooter,
-            LimelightVision vision,
-            int numberOfShots,
-            double timeoutSeconds) {
+
+    public static Command checkRedCellScorable(LimelightVision limelight, double timeoutSeconds, boolean[] scorableResult) {
 
         ElapsedTime timer = new ElapsedTime();
-        boolean[] fired = {false};
+        boolean[] finished = {false};
 
         return Command.build()
                 .setStart(() -> {
-                    fired[0] = false;
+                    scorableResult[0] = false;
+                    finished[0] = false;
                     timer.reset();
+                    limelight.start();
                 })
                 .setExecute(() -> {
-                    if (!fired[0]
-                            && vision.seesRedTag()
-                            && vision.isScorable()
-                            && !shooter.isBusy()) {
-
-                        shooter.fireShots(numberOfShots);
-                        fired[0] = true;
+                    if (limelight.seesRedTag() && limelight.isScorable()) {
+                        scorableResult[0] = true;
+                        finished[0] = true;
                     }
                 })
-                .setDone(() ->
-                        (fired[0] && shooter.isDoneShooting())
-                                || timer.seconds() >= timeoutSeconds)
-                .requiring(shooter);
+                .setDone(() -> finished[0] || timer.seconds() >= timeoutSeconds)
+                .setEnd(endCondition -> limelight.stop());
     }
 }

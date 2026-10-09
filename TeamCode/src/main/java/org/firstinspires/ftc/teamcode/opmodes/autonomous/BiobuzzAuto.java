@@ -12,6 +12,7 @@ import com.pedropathing.paths.Path;
 
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
+import static com.pedropathing.ivy.commands.Commands.conditional;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.groups.Groups.parallel;
@@ -26,9 +27,8 @@ import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.LimelightVision;
-import org.firstinspires.ftc.teamcode.mechanisms.Probe;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
-import org.firstinspires.ftc.teamcode.mechanisms.commands.MechanismCommands;
+import static org.firstinspires.ftc.teamcode.mechanisms.commands.Commands.*;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 
@@ -39,7 +39,6 @@ public class BiobuzzAuto extends OpMode {
 
     private Follower follower;
     private Shooter shooter;
-    private Probe probe;
     private Intake intake;
     private LimelightVision limelight;
 
@@ -63,17 +62,22 @@ public class BiobuzzAuto extends OpMode {
     // Autonomous routine
     public Command autoRoutine() {
         return sequential(
-                MechanismCommands.shootWhenRedCellScorable(shooter, limelight, 4, 3.0),
-                parallel(follow(follower, startToFlower1()),
-                        MechanismCommands.runAtProgress(follower, intake, probe, 1, .8, 1)),
-                parallel(follow(follower, flower1ToShoot2()),
-                        MechanismCommands.runAtProgress(follower, intake, probe, 0, .2, 0)),
-                parallel(MechanismCommands.shootWhenRedCellScorable(shooter, limelight, 4, 3.0)),
-                        MechanismCommands.runIntake(intake, .5),
-                parallel(follow(follower, shoot2ToFlower2()), MechanismCommands.runIntake(intake, 1), MechanismCommands.setProbe(probe, 1)),
+                shoot(shooter, 4),
+                parallel(
+                        follow(follower, startToFlower1()),
+                        runAtProgress(follower, intake, .8, 1, 1)),
+                parallel(
+                        follow(follower, flower1ToShoot2()),
+                        runAtProgress(follower, intake, .2, 0, 0)),
+                shoot(shooter, 4),
+                parallel(
+                        follow(follower, shoot2ToFlower2()),
+                        runIntake(intake, 1),
+                        setProbe(intake, 1)),
                 follow(follower, flower2ToShoot2()),
-                parallel(MechanismCommands.shootWhenRedCellScorable(shooter, limelight, 4, 3.0),
-                        MechanismCommands.runIntake(intake, .5), MechanismCommands.setProbe(probe,0)),
+                parallel(
+                        shoot(shooter, 4),
+                        setProbe(intake,0)),
                 parallel(follow(follower, shoot2ToPark()))
         );
     }
@@ -154,5 +158,18 @@ public class BiobuzzAuto extends OpMode {
     public Path shoot2ToPark() {
         return Paths.line(shootPose2, parkPose)
                 .linear(shootPose2, parkPose);
+    }
+
+    private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
+        boolean[] scorable = {false};
+
+        return sequential(
+                checkRedCellScorable(limelight, timeoutSeconds, scorable),
+
+                conditional(() -> scorable[0],
+                        shoot(shooter, numberOfShots),
+                        Command.build().setDone(() -> true)
+                )
+        );
     }
 }
