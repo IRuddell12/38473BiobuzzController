@@ -51,10 +51,21 @@ public class BiobuzzAuto extends OpMode {
     private final Pose startToFlower1_Segment1End = p.of(11.7307, 47.32, 180);
     private final Pose startToFlower1_Segment2Start = p.of(11.7307, 47.32, 180);
     private final Pose startToFlower1_Segment2End = p.of(11.7307, 47.32, 180);
-    
-    private final Pose shootPose2 = p.of(47.4029, 124.0457, 110);
-    private final Pose flower1ToShoot2Control1 = p.of(31.4, 49.1807, 0);
-    private final Pose flower1ToShoot2Control2 = p.of(20.4414, 102.9264, 0);
+
+
+    private final Pose shootPose1 = p.of(58, 24, 270);
+    private final Pose shootPose2 = p.of(58, 118, 110);
+    private final Pose flower1ToShoot2Control1 = p.of(34, 48, 0);
+    private final Pose flower1ToShoot2Control2 = p.of(18, 110, 0);
+
+    private final Pose shoot2ToFlower2Control = p.of(47, 118, 0);
+
+    private final Pose shootToShoot_Segment1Start = p.of(58, 24, 90);
+    private final Pose ShootToShoot_Segment1End = p.of(58, 24, 180);
+    private final Pose shootToShoot_Segment2Start = p.of(58, 24, 180);
+    private final Pose shootToShoot_Segment2End = p.of(58, 24, 180);
+    private final Pose shootToShoot_Segment3Start = p.of(58, 24, 180);
+    private final Pose shootToShoot_Segment3End = p.of(58, 24, 270);
 
     private final Pose flower2Pose = p.of(47.2343, 129.5021, 90);
     private final Pose parkPose = p.of(15.5179, 110.09, 270);
@@ -146,18 +157,22 @@ public class BiobuzzAuto extends OpMode {
     }
 
     public Path shoot2ToFlower2() {
-        return Paths.line(shootPose2, flower2Pose)
+        return Paths.curve(shootPose2, shoot2ToFlower2Control, flower2Pose)
                 .linear(shootPose2, flower2Pose);
     }
 
     public Path flower2ToShoot2() {
-        return Paths.line(flower2Pose, shootPose2)
+        return Paths.curve(flower2Pose, shoot2ToFlower2Control, shootPose2)
                 .linear(flower2Pose, shootPose2);
     }
 
     public Path shoot2ToPark() {
         return Paths.line(shootPose2, parkPose)
                 .linear(shootPose2, parkPose);
+    }
+
+    public Path shoot2Toshoot1() {
+        return Paths.line(shootPose2, shootPose1).heading(Interpolator.piecewise().until(0.2, Interpolator.linear(shootToShoot_Segment1Start, ShootToShoot_Segment1End)).until(0.8, Interpolator.linear(shootToShoot_Segment2Start, shootToShoot_Segment2End)).until(1, Interpolator.linear(shootToShoot_Segment3Start, shootToShoot_Segment3End)));
     }
 
     private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
