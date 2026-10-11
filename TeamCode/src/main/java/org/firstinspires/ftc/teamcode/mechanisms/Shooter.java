@@ -9,7 +9,8 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 
 public class Shooter {
-    private DcMotorEx flywheel;
+    private DcMotorEx pollenFlywheel;
+    private DcMotorEx nectarFlywheel;
     Intake intake = new Intake();
     private Servo gate;
     double F = 13;
@@ -44,10 +45,15 @@ public class Shooter {
     public void init(HardwareMap hwMap) {
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
 
-        flywheel = hwMap.get(DcMotorEx.class, "flywheel");
-        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
-        flywheel.setVelocity(0.0);
+        pollenFlywheel = hwMap.get(DcMotorEx.class, "pollen_flywheel");
+        pollenFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pollenFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        pollenFlywheel.setVelocity(0.0);
+
+        nectarFlywheel = hwMap.get(DcMotorEx.class, "nectar_flywheel");
+        pollenFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        pollenFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        pollenFlywheel.setVelocity(0.0);
 
         flywheelState = FlywheelState.IDLE;
 
@@ -58,17 +64,17 @@ public class Shooter {
 
     public void update() {
 
-        flywheelVelocity = flywheel.getVelocity();
+        flywheelVelocity = pollenFlywheel.getVelocity();
 
         switch (flywheelState) {
 
             case IDLE:
                 intake.runIntake(0.5);
                 gate.setPosition(gateCloseAngle);
-                flywheel.setVelocity(targetShootingVelocity); //set velocity
+                pollenFlywheel.setVelocity(targetShootingVelocity); //set velocity
 
                 if (shotsRemaining > 0) {
-                    flywheel.setVelocity(targetShootingVelocity);
+                    pollenFlywheel.setVelocity(targetShootingVelocity);
                     stateTimer.reset();
                     flywheelState = FlywheelState.SPIN_UP;
                 }
@@ -76,7 +82,7 @@ public class Shooter {
 
             case SPIN_UP:
                 //set velocity
-                flywheel.setVelocity(targetShootingVelocity);
+                pollenFlywheel.setVelocity(targetShootingVelocity);
                 intake.runIntake(1.0);
 
                 if (flywheelVelocity > (targetShootingVelocity * .95) || (stateTimer.seconds() > flywheelMaxSpinupTime)) {
@@ -139,8 +145,27 @@ public class Shooter {
     }
 
     //tells the motor to run at the inputted value with a broken down function: setFlywheelSpeed(x)
-    public void setFlywheelSpeed(double speed) {
-        flywheel.setVelocity(speed);
+    public void setPollenFlywheelSpeed(double speed) {
+        pollenFlywheel.setVelocity(speed);
+    }
+    public void setNectarFlywheel2Speed(double speed) {
+        nectarFlywheel.setVelocity(speed);
+    }
+
+    public static double pollenFlywheelInterpolated(double distanceGoal) {
+        return Math.max(0, Math.min(1700, 0.0284842*Math.pow(distanceGoal,2) + 1.37825*distanceGoal+878.94372));
+    }
+
+    public static double nectarFlywheelInterpolated(double distanceGoal) {
+        return Math.max(0, Math.min(1700, 0.0284842*Math.pow(distanceGoal,2) + 1.37825*distanceGoal+878.94372));
+    }
+
+    public static double pollenHoodInterpolated(double distanceGoal) {
+        return Math.max(0.0, Math.min(1.0, 0.000000222478*Math.pow(distanceGoal,3)-0.0000690144*Math.pow(distanceGoal, 2)+0.0029916*distanceGoal+0.75755));
+    }
+
+    public static double nectarHoodInterpolated(double distanceGoal) {
+        return Math.max(0.0, Math.min(1.0, 0.000000222478*Math.pow(distanceGoal,3)-0.0000690144*Math.pow(distanceGoal, 2)+0.0029916*distanceGoal+0.75755));
     }
 
     public boolean isDoneShooting() {

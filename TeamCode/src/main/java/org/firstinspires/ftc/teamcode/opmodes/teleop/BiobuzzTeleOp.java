@@ -58,19 +58,12 @@ public class BiobuzzTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        //------------------DRIVER CODE-------------------
-        DrivePowers powers = ManualDrive.fieldCentric(
-                -gamepad1.left_stick_y,
-                gamepad1.left_stick_x,
-                gamepad1.right_stick_x,
-                follower.pose().heading()
-        );
-
-        ManualDrive.driveOrHold(follower, powers);
-
+        intake.updateIntakeDetection();
+        intake.preventOverfill();
 
         follower.update();
         Pose robotPose = follower.pose();
+
 
         //---------ROBOT TARGET HEADING CODE (SUBSET OF DRIVER CODE)---------
         //Calculates heading of robot based on Goal and adjusts
@@ -99,32 +92,56 @@ public class BiobuzzTeleOp extends OpMode {
 
         double rotatePower = kP * headingError;
 
-//        if (gamepad1.dpadRightWasPressed() && kP < 10.0) {
+//        if (gamepad2.dpadRightWasPressed() && kP < 10.0) {
 //            kP += 0.1;
-//        } else if (gamepad1.dpadLeftWasPressed() && kP > 0.0) {
+//        } else if (gamepad2.dpadLeftWasPressed() && kP > 0.0) {
 //            kP -= 0.1;
 //        }
 
         // Clamp rotate power to max motor speed
         rotatePower = Math.max(-1.0, Math.min(1.0, rotatePower));
 
+
+//------------------- DRIVER CODE -------------------
+
+        double forward = -gamepad1.left_stick_y;
+        double strafe = gamepad1.left_stick_x;
+        double rotate = gamepad1.right_stick_x;
+
         double slowDrive = 0.25;
 
-        //ONLY DRIVES IF NOT FOLLOWING AUTOMATED PATH
-//        if (!automatedDrive) {
-//            if (gamepad1.right_trigger > 0.3) {
-//                follower.setTeleOpDrive(forward*slowDrive,strafe*slowDrive,rotate*slowDrive, false);
-//            } else if (gamepad1.right_bumper) {
-//                follower.setTeleOpDrive(forward,strafe,rotate, true);
-//            } else if (gamepad1.left_trigger > 0.3) { // trigger held → auto-align
-//                follower.setTeleOpDrive(forward, strafe, rotatePower, false);
-//            } else {
-//                follower.setTeleOpDrive(forward, strafe, rotate, false);
-//            }
-//        }
+        DrivePowers powers;
+
+        if (gamepad1.right_trigger > 0.3) {
+            // Slow driving
+            powers = ManualDrive.fieldCentric(
+                    forward * slowDrive,
+                    strafe * slowDrive,
+                    rotate * slowDrive,
+                    follower.pose().heading()
+            );
+        } else if (gamepad1.left_trigger > 0.3) {
+            // Auto-align to the goal
+            powers = ManualDrive.fieldCentric(
+                    forward,
+                    strafe,
+                    rotatePower,
+                    follower.pose().heading()
+            );
+        } else {
+            // Normal field-centric driving
+            powers = ManualDrive.fieldCentric(
+                    forward,
+                    strafe,
+                    rotate,
+                    follower.pose().heading()
+            );
+        }
+
+        ManualDrive.driveOrHold(follower, powers);
 
         //------------------LAUNCHER CODE---------------------
-//        flywheel.setFlywheelSpeed(Shooter.flywheelInterpolated(targetDistance)+flywheelOffset);
+        flywheel.setPollenFlywheelSpeed(Shooter.pollenFlywheelInterpolated(targetDistance)+flywheelOffset);
 //        hood.setHoodPos(Shooter.hoodInterpolated(targetDistance));
 
         if (gamepad2.dpadUpWasPressed() && flywheelOffset < 100) {
@@ -139,15 +156,9 @@ public class BiobuzzTeleOp extends OpMode {
             flywheelOffset += 1.0;
         }
 
-        /*if (gamepad1.b) {
-            intake.runIntake(Shooter.intakeInterpolated(targetDistance));
+        if (gamepad1.b) {
             flywheel.setGatePosition(0.5);
-        } else if (gamepad2.right_trigger > 0.3){
-            intake.runIntake(1.0);
-        } else {
-            flywheel.setGatePosition(0.15);
-            intake.runIntake(0.0);
-        }*/
+        }
 
         telemetry.addData("Distance to Goal", targetDistance);
         telemetry.addData("Target Heading", targetHeading);

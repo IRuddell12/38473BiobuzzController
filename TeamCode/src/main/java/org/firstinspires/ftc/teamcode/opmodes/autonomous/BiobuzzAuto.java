@@ -14,6 +14,9 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
 import static com.pedropathing.ivy.commands.Commands.conditional;
 import static com.pedropathing.ivy.Scheduler.schedule;
+import static com.pedropathing.ivy.commands.Commands.instant;
+import static com.pedropathing.ivy.commands.Commands.waitMs;
+import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.groups.Groups.parallel;
 
@@ -23,6 +26,7 @@ import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.paths.interpolator.Interpolator;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -70,25 +74,14 @@ public class BiobuzzAuto extends OpMode {
     private final Pose flower2Pose = p.of(47.2343, 129.5021, 90);
     private final Pose parkPose = p.of(15.5179, 110.09, 270);
 
+    private final double flowerIntakeTimeout = 2.0;
+
     // Autonomous routine
     public Command autoRoutine() {
         return sequential(
-                shoot(shooter, 4),
-                parallel(
-                        follow(follower, startToFlower1()),
-                        runAtProgress(follower, intake, .8, 1, 1)),
-                parallel(
-                        follow(follower, flower1ToShoot2()),
-                        runAtProgress(follower, intake, .2, 0, 0)),
-                shoot(shooter, 4),
-                parallel(
-                        follow(follower, shoot2ToFlower2()),
-                        runIntake(intake, 1),
-                        setProbe(intake, 1)),
-                follow(follower, flower2ToShoot2()),
-                parallel(
-                        shoot(shooter, 4),
-                        setProbe(intake,0)),
+                shootPreloads(),
+                runCycle1(),
+                runCycle2(),
                 parallel(follow(follower, shoot2ToPark()))
         );
     }
@@ -122,6 +115,7 @@ public class BiobuzzAuto extends OpMode {
             follower.update();
             shooter.update();
             limelight.update();
+            intake.updateIntakeDetection();
             Scheduler.execute();
 
             PoseHolder.savedPose = follower.pose();
@@ -177,7 +171,6 @@ public class BiobuzzAuto extends OpMode {
 
     private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
         boolean[] scorable = {false};
-
         return sequential(
                 checkRedCellScorable(limelight, timeoutSeconds, scorable),
 
@@ -185,6 +178,52 @@ public class BiobuzzAuto extends OpMode {
                         shoot(shooter, numberOfShots),
                         Command.build().setDone(() -> true)
                 )
+        );
+    }
+
+    private Command shootPreloads() {
+        return sequential(
+        shoot(shooter, 4)
+        );
+    }
+
+    private Command waitForFullCapacity() {
+        ElapsedTime timer = new ElapsedTime();
+
+        return waitUntil(() ->
+                intake.isFull() || timer.seconds() >= flowerIntakeTimeout
+        );
+    }
+
+    private Command runCycle1() {
+        return sequential(
+                parallel(
+                        follow(follower, startToFlower1()),
+                        runAtProgress(follower, intake, .8, 1, 1)),
+                parallel(
+                        follow(follower, flower1ToShoot2()),
+                        runAtProgress(follower, intake, .2, 0, 0)),
+                shoot(shooter, 4)
+        );
+    }
+
+    private Command runCycle2() {
+        return sequential(
+                parallel(
+                        follow(follower, shoot2ToFlower2()),
+                        runIntake(intake, 1),
+                        setProbe(intake, 1)),
+                waitForFullCapacity(),
+                follow(follower, flower2ToShoot2()),
+                parallel(
+                        shoot(shooter, 4),
+                        setProbe(intake,0))
+        );
+    }
+
+    private Command searchCheckShootTransition() {
+        return sequential(
+
         );
     }
 }

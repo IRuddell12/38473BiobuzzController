@@ -38,7 +38,7 @@ public class Commands {
             double velocity) {
 
         return Command.build()
-                .setStart(() -> shooter.setFlywheelSpeed(velocity))
+                .setStart(() -> shooter.setPollenFlywheelSpeed(velocity))
                 .setDone(() -> true)
                 .requiring(shooter);
     }
