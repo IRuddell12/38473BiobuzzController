@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.PoseHolder;
+import org.firstinspires.ftc.teamcode.settings.RobotSettings;
 
 //@Disabled
 @TeleOp(name = "Tele-Op")
@@ -32,15 +33,35 @@ public class BiobuzzTeleOp extends OpMode {
     double targetAngleOffset = 0;
     double kP = 0.4; // proportional constant, tune this
 
+    private static final double FIELD_SIZE = 144.0;
+
+    private Pose alliancePose(Pose redPose) {
+        if (RobotSettings.allianceColor
+                != RobotSettings.AllianceColor.BLUE) {
+            return redPose;
+        }
+
+        double blueX = FIELD_SIZE - redPose.x();
+        double blueY = FIELD_SIZE - redPose.y();
+
+        // PoseFactory.degrees() expects degrees.
+        double blueHeading =
+                (Math.toDegrees(redPose.heading()) + 180.0) % 360.0;
+
+        return p.of(blueX, blueY, blueHeading);
+    }
+
 
     @Override
     public void init() {
         follower = Constants.create(hardwareMap);
 
         if (PoseHolder.savedPose != null) {
+            // Autonomous already saved the alliance-adjusted pose.
             follower.setPose(PoseHolder.savedPose);
         } else {
-            follower.setPose(manualStartPose);
+            // Transform the manual starting pose for Blue.
+            follower.setPose(alliancePose(manualStartPose));
         }
 
         intake.init(hardwareMap);
@@ -48,6 +69,14 @@ public class BiobuzzTeleOp extends OpMode {
         automatedDrive = false;
 
         flywheel.setGatePosition(0.5);
+
+        telemetry.addData(
+                "Selected Alliance",
+                RobotSettings.allianceColor == null
+                        ? "NOT SELECTED"
+                        : RobotSettings.allianceColor
+        );
+        telemetry.update();
 
         telemetry.addData("Starting Pose", PoseHolder.savedPose != null ? "Restored from Autonomous" : "Manual Start Pose");
     }
@@ -71,36 +100,51 @@ public class BiobuzzTeleOp extends OpMode {
         double robotY = robotPose.y();
         double heading = robotPose.heading();
 
-        double xGoal = 84;
-        double yGoal;
+        // Canonical goal coordinates for Red.
+        double redEquivalentY = robotY;
 
-        if (robotY > 72) {
-            yGoal = 84; //TODO Should stay the same but feel free to tune if needed
-        } else {
-            yGoal = 60; //TODO Should stay the same but feel free to tune if needed
+        if (RobotSettings.allianceColor
+                == RobotSettings.AllianceColor.BLUE) {
+            redEquivalentY = FIELD_SIZE - robotY;
+        }
+
+// Select the goal based on the robot's equivalent Red-side position.
+        double redGoalX = 84;
+        double redGoalY = redEquivalentY > 72 ? 84 : 60;
+
+// Convert the selected goal to the active alliance.
+        double xGoal = redGoalX;
+        double yGoal = redGoalY;
+
+        if (RobotSettings.allianceColor
+                == RobotSettings.AllianceColor.BLUE) {
+            xGoal = FIELD_SIZE - redGoalX;
+            yGoal = FIELD_SIZE - redGoalY;
         }
 
         double deltaX = xGoal - robotX;
         double deltaY = yGoal - robotY;
 
-        double targetDistance = Math.sqrt((deltaX*deltaX)+(deltaY*deltaY));
+        double targetDistance =
+                Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-        double targetHeading = Math.atan2(deltaY, deltaX) + targetAngleOffset;
+        double targetHeading =
+                Math.atan2(deltaY, deltaX) + targetAngleOffset;
 
-        double headingError = Math.atan2(Math.sin(targetHeading - heading),
-                Math.cos(targetHeading - heading));
+        double headingError = Math.atan2(
+                Math.sin(targetHeading - heading),
+                Math.cos(targetHeading - heading)
+        );
 
         double rotatePower = kP * headingError;
+        // Clamp rotate power to max motor speed
+        rotatePower = Math.max(-1.0, Math.min(1.0, rotatePower));
 
 //        if (gamepad2.dpadRightWasPressed() && kP < 10.0) {
 //            kP += 0.1;
 //        } else if (gamepad2.dpadLeftWasPressed() && kP > 0.0) {
 //            kP -= 0.1;
 //        }
-
-        // Clamp rotate power to max motor speed
-        rotatePower = Math.max(-1.0, Math.min(1.0, rotatePower));
-
 
 //------------------- DRIVER CODE -------------------
 

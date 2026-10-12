@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.mechanisms.commands;
 
+import static com.pedropathing.ivy.commands.Commands.instant;
+
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 
@@ -55,10 +57,7 @@ public class Commands {
 //-----------------------PROBE COMMANDS-------------------------------
 
     public static Command setProbe(Intake intake, int position) {
-        return Command.build()
-                .setStart(() -> intake.setProbe(position))
-                .setExecute(() -> intake.setProbe(position))
-                .requiring(intake);
+        return instant(() -> intake.setProbe(position));
     }
 
 //------------------SPECIAL AUTO COMMANDS-----------------------------

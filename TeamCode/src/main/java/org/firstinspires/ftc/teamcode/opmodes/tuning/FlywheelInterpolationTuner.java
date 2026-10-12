@@ -97,7 +97,7 @@ public class FlywheelInterpolationTuner extends OpMode {
         double targetDistance = Math.hypot(deltaX,deltaY);
 
         hood.setHoodPos(hoodStep);
-        shooter.setFlywheelSpeed(flywheelSpeed);
+        shooter.setPollenFlywheelSpeed(flywheelSpeed);
 
         telemetry.addData("Intake Speed", intakeSpeed);
         telemetry.addData("Hood Posistion", hoodStep);

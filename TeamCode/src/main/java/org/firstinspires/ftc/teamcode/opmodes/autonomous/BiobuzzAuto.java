@@ -1,14 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
-
+import org.firstinspires.ftc.teamcode.settings.RobotSettings;
 import com.pedropathing.api.Paths;
-
 
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
-
 
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
@@ -22,12 +20,10 @@ import static com.pedropathing.ivy.groups.Groups.parallel;
 
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.LimelightVision;
@@ -45,6 +41,24 @@ public class BiobuzzAuto extends OpMode {
     private Shooter shooter;
     private Intake intake;
     private LimelightVision limelight;
+
+    private boolean previousLeftBumper = false;
+    private boolean previousRightBumper = false;
+    private boolean previousOptions = false;
+
+    private static final double FIELD_SIZE = 144.0;
+
+    private Pose alliancePose(Pose redPose) {
+        if (RobotSettings.allianceColor != RobotSettings.AllianceColor.BLUE) {
+            return redPose;
+        }
+
+        double blueX = FIELD_SIZE - redPose.x();
+        double blueY = FIELD_SIZE - redPose.y();
+        double blueHeading = (redPose.heading() + 180.0) % 360.0;
+
+        return p.of(blueX, blueY, blueHeading);
+    }
 
     private final PoseFactory p = PoseFactory.degrees();
 
@@ -104,10 +118,64 @@ public class BiobuzzAuto extends OpMode {
         limelight.init(hardwareMap);
 
         follower.update();
+
     }
 
     @Override
+    public void init_loop() {
+        boolean leftBumper = gamepad1.left_bumper;
+        boolean rightBumper = gamepad1.right_bumper;
+        boolean options = gamepad1.options;
+
+        // Options resets the alliance selection.
+        if (options && !previousOptions) {
+            RobotSettings.allianceColor = null;
+        }
+
+        // Select alliance on a new button press.
+        if (leftBumper && !previousLeftBumper) {
+            RobotSettings.allianceColor =
+                    RobotSettings.AllianceColor.BLUE;
+        } else if (rightBumper && !previousRightBumper) {
+            RobotSettings.allianceColor =
+                    RobotSettings.AllianceColor.RED;
+        }
+
+        telemetry.addLine("=== WARRIOR DYNAMICS ===");
+        telemetry.addLine("Select Alliance");
+        telemetry.addLine("Left Bumper: BLUE");
+        telemetry.addLine("Right Bumper: RED");
+        telemetry.addLine("Options: Reset Selection");
+
+        telemetry.addData(
+                "Selected Alliance",
+                RobotSettings.allianceColor == null
+                        ? "NOT SELECTED"
+                        : RobotSettings.allianceColor
+        );
+
+        telemetry.addLine(
+                RobotSettings.allianceColor == null
+                        ? "Select an alliance before starting."
+                        : "Alliance selected."
+        );
+
+        telemetry.update();
+
+        previousLeftBumper = leftBumper;
+        previousRightBumper = rightBumper;
+        previousOptions = options;
+    }
+
+
+    @Override
     public void start() {
+        if (RobotSettings.allianceColor == null) {
+            telemetry.addLine("Select an alliance first.");
+            telemetry.update();
+            return;
+        }
+
         schedule(autoRoutine());
     }
 
@@ -139,35 +207,78 @@ public class BiobuzzAuto extends OpMode {
         }
     }
 
+
     public Path startToFlower1() {
-        return Paths.curve(startPose, startToFlower1Control, flower1Pose).heading(Interpolator.piecewise()
-                .until(0.8, Interpolator.linear(startToFlower1_Segment1Start, startToFlower1_Segment1End))
-                .until(1, Interpolator.linear(startToFlower1_Segment2Start, startToFlower1_Segment2End)));
+        return Paths.curve(
+                alliancePose(startPose),
+                alliancePose(startToFlower1Control),
+                alliancePose(flower1Pose)
+        ).heading(Interpolator.piecewise()
+                .until(0.8, Interpolator.linear(
+                        alliancePose(startToFlower1_Segment1Start),
+                        alliancePose(startToFlower1_Segment1End)))
+                .until(1, Interpolator.linear(
+                        alliancePose(startToFlower1_Segment2Start),
+                        alliancePose(startToFlower1_Segment2End))));
     }
 
     public Path flower1ToShoot2() {
-        return Paths.curve(flower1Pose, flower1ToShoot2Control1, flower1ToShoot2Control2, shootPose2)
-                .linear(flower1Pose, shootPose2);
+        Pose start = alliancePose(flower1Pose);
+        Pose end = alliancePose(shootPose2);
+
+        return Paths.curve(
+                start,
+                alliancePose(flower1ToShoot2Control1),
+                alliancePose(flower1ToShoot2Control2),
+                end
+        ).linear(start, end);
     }
 
     public Path shoot2ToFlower2() {
-        return Paths.curve(shootPose2, shoot2ToFlower2Control, flower2Pose)
-                .linear(shootPose2, flower2Pose);
+        Pose start = alliancePose(shootPose2);
+        Pose end = alliancePose(flower2Pose);
+
+        return Paths.curve(
+                start,
+                alliancePose(shoot2ToFlower2Control),
+                end
+        ).linear(start, end);
     }
 
     public Path flower2ToShoot2() {
-        return Paths.curve(flower2Pose, shoot2ToFlower2Control, shootPose2)
-                .linear(flower2Pose, shootPose2);
+        Pose start = alliancePose(flower2Pose);
+        Pose end = alliancePose(shootPose2);
+
+        return Paths.curve(
+                start,
+                alliancePose(shoot2ToFlower2Control),
+                end
+        ).linear(start, end);
     }
 
     public Path shoot2ToPark() {
-        return Paths.line(shootPose2, parkPose)
-                .linear(shootPose2, parkPose);
+        Pose start = alliancePose(shootPose2);
+        Pose end = alliancePose(parkPose);
+
+        return Paths.line(start, end).linear(start, end);
     }
 
     public Path shoot2Toshoot1() {
-        return Paths.line(shootPose2, shootPose1).heading(Interpolator.piecewise().until(0.2, Interpolator.linear(shootToShoot_Segment1Start, ShootToShoot_Segment1End)).until(0.8, Interpolator.linear(shootToShoot_Segment2Start, shootToShoot_Segment2End)).until(1, Interpolator.linear(shootToShoot_Segment3Start, shootToShoot_Segment3End)));
+        Pose start = alliancePose(shootPose2);
+        Pose end = alliancePose(shootPose1);
+
+        return Paths.line(start, end).heading(Interpolator.piecewise()
+                .until(0.2, Interpolator.linear(
+                        alliancePose(shootToShoot_Segment1Start),
+                        alliancePose(ShootToShoot_Segment1End)))
+                .until(0.8, Interpolator.linear(
+                        alliancePose(shootToShoot_Segment2Start),
+                        alliancePose(shootToShoot_Segment2End)))
+                .until(1, Interpolator.linear(
+                        alliancePose(shootToShoot_Segment3Start),
+                        alliancePose(shootToShoot_Segment3End))));
     }
+
 
     private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
         boolean[] scorable = {false};
@@ -182,17 +293,19 @@ public class BiobuzzAuto extends OpMode {
     }
 
     private Command shootPreloads() {
-        return sequential(
-        shoot(shooter, 4)
+        return sequential(shoot(shooter, 4)
         );
     }
 
     private Command waitForFullCapacity() {
         ElapsedTime timer = new ElapsedTime();
 
-        return waitUntil(() ->
-                intake.isFull() || timer.seconds() >= flowerIntakeTimeout
-        );
+        return Command.build()
+                .setStart(timer::reset)
+                .setDone(() ->
+                        intake.isFull()
+                                || timer.seconds() >= flowerIntakeTimeout
+                );
     }
 
     private Command runCycle1() {
