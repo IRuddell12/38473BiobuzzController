@@ -34,7 +34,7 @@ public class Shooter {
     //---------FLYWHEEL CONSTANTS----------
     private int shotsRemaining = 0;
     private double flywheelVelocity = 0;
-    private double targetShootingVelocity = 1900;
+    private double targetShootingVelocity = 1400;
     private double restingFlywheelVelocity = 1000;
     private double flywheelMaxSpinupTime = .25;
 

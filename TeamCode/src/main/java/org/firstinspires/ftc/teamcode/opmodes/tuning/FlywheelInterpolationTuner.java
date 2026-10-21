@@ -22,7 +22,7 @@ public class FlywheelInterpolationTuner extends OpMode {
     double gateClosed = 0.15;
     double gateOpen = 0.8;
     double flywheelSpeed = 1200;//
-    double intakeSpeed = 0.8;
+    double intakePower = 0.8;
 
     private final PoseFactory p = PoseFactory.degrees();
 
@@ -54,16 +54,16 @@ public class FlywheelInterpolationTuner extends OpMode {
             shooter.setGatePosition(gateClosed);
         }
 
-        if (gamepad1.rightBumperWasPressed() && intakeSpeed < 1.0) {
-            intakeSpeed += 0.05;
+        if (gamepad1.rightBumperWasPressed() && intakePower < 1.0) {
+            intakePower += 0.05;
         }
 
-        if (gamepad1.left_bumper && intakeSpeed < 1.0) {
-            intakeSpeed -=0.05;
+        if (gamepad1.left_bumper && intakePower < 1.0) {
+            intakePower -=0.05;
         }
 
         if (gamepad1.right_trigger > 0.3) {
-            intake.runIntake(intakeSpeed);
+            intake.runIntake(intakePower);
         } else {
             intake.runIntake(0);
         }
@@ -99,7 +99,7 @@ public class FlywheelInterpolationTuner extends OpMode {
         hood.setHoodPos(hoodStep);
         shooter.setPollenFlywheelSpeed(flywheelSpeed);
 
-        telemetry.addData("Intake Speed", intakeSpeed);
+        telemetry.addData("Intake Speed", intakePower);
         telemetry.addData("Hood Posistion", hoodStep);
         telemetry.addData("Flywheel Speed", flywheelSpeed);
         telemetry.addData("Distance", targetDistance);

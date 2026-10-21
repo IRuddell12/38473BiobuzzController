@@ -33,14 +33,11 @@ public class Intake {
     private boolean detectionArmed = true;
 
     public void init(HardwareMap hwMap) {
-        intake = hwMap.get(DcMotorEx.class, "intake");
+        intake = hwMap.get(DcMotorEx.class, "intake_motor");
         intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        feeder = hwMap.get(CRServo.class, "feeder");
-        feeder.setDirection(CRServo.Direction.REVERSE);
-
-        probe = hwMap.get(Servo.class, "probe");
-        probe.scaleRange(down, up);
+        //probe = hwMap.get(Servo.class, "probe");
+        //probe.scaleRange(down, up);
     }
 
     public void runIntake(double power) {

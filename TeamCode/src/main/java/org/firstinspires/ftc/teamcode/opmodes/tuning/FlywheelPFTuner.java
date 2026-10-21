@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.tuning;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
 //@Disabled
@@ -15,11 +15,11 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 public class FlywheelPFTuner extends OpMode {
 
     Intake intake = new Intake();
-    public DcMotorEx flywheelMotor1;
+    public DcMotorEx nectarFlywheel;
     //public DcMotorEx flywheelMotor2;
 
-    public double highVelocity = 1650;
-    public double lowVelocity = 1300;
+    public double highVelocity = 800; //ticks*2.142857143 = RPMS
+    public double lowVelocity = 0;
     double curTargetVelocity = highVelocity;
 
     double F = 13; //13
@@ -33,13 +33,9 @@ public class FlywheelPFTuner extends OpMode {
     public void init() {
         intake.init(hardwareMap);
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
-        flywheelMotor1 = hardwareMap.get(DcMotorEx.class, "flywheel_motor1");
-        flywheelMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelMotor1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
-//        flywheelMotor2 = hardwareMap.get(DcMotorEx.class, "flywheel_motor2");
-//        flywheelMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        flywheelMotor2.setDirection(DcMotorEx.Direction.REVERSE);
-//        flywheelMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        nectarFlywheel = hardwareMap.get(DcMotorEx.class, "nectar_flywheel");
+        nectarFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        nectarFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         telemetry.addLine("Init complete");
     }
 
@@ -47,14 +43,20 @@ public class FlywheelPFTuner extends OpMode {
     public void loop() {
         intake.runIntake(0.1);
 
-        if (gamepad1.yWasPressed()) {
+        if (gamepad1.triangleWasPressed()) {
             if (curTargetVelocity == highVelocity) {
                 curTargetVelocity = lowVelocity;
             } else {
                 curTargetVelocity = highVelocity; }
         }
 
-        if (gamepad1.bWasPressed()) {
+        if (gamepad1.rightBumperWasPressed()) {
+            highVelocity += 10;
+        } else if (gamepad1.leftBumperWasPressed()) {
+            highVelocity -= 10;
+        }
+
+        if (gamepad1.squareWasPressed()) {
             stepIndex = (stepIndex + 1) % stepSizes.length;
         }
 
@@ -74,14 +76,14 @@ public class FlywheelPFTuner extends OpMode {
 
         // set new PIDF coefficients
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
-        flywheelMotor1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
-        flywheelMotor1.setVelocity(curTargetVelocity);
+        nectarFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        nectarFlywheel.setVelocity(curTargetVelocity);
 
-        //flywheelMotor2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
-        //flywheelMotor2.setVelocity(curTargetVelocity);
-
-        double curVelocity = flywheelMotor1.getVelocity();
+        double curVelocity = nectarFlywheel.getVelocity();
         double error = curTargetVelocity - curVelocity;
+
+        telemetry.addData("Nectar Flywheel Amperage:", nectarFlywheel.getCurrent(CurrentUnit.AMPS));
+        //telemetry.addData("Pollen FLywheel Amperage", pollenFlywheel.getCurrent(CurrentUnit.AMPS));
 
         telemetry.addData("Target Velocity", curTargetVelocity);
         telemetry.addData("Current Velocity", "%.3f", curVelocity);
