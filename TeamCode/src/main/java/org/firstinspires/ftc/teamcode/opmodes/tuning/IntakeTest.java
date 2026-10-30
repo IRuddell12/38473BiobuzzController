@@ -18,10 +18,10 @@ public class IntakeTest extends OpMode {
 
     @Override
     public void init() {
-        intake = hardwareMap.get(DcMotorEx.class, "intake_motor");
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
 
-        flywheel = hardwareMap.get(DcMotorEx.class, "nectar_flywheel");
-        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //flywheel = hardwareMap.get(DcMotorEx.class, "nectar_flywheel");
+       //flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //leftIntake = hardwareMap.get(CRServo.class,"left_intake_servo");
 
@@ -42,9 +42,9 @@ public class IntakeTest extends OpMode {
         }
 
         if (gamepad1.left_trigger > 0.3) {
-            flywheel.setVelocity(800);
+           //flywheel.setVelocity(800);
         } else {
-            flywheel.setVelocity(0);
+            //flywheel.setVelocity(0);
         }
     }
 }

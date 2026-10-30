@@ -33,7 +33,7 @@ public class Intake {
     private boolean detectionArmed = true;
 
     public void init(HardwareMap hwMap) {
-        intake = hwMap.get(DcMotorEx.class, "intake_motor");
+        intake = hwMap.get(DcMotorEx.class, "intake");
         intake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         //probe = hwMap.get(Servo.class, "probe");

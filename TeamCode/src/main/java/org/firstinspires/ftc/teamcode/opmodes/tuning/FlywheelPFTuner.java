@@ -14,11 +14,11 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
 public class FlywheelPFTuner extends OpMode {
 
-    Intake intake = new Intake();
+    //Intake intake = new Intake();
     public DcMotorEx nectarFlywheel;
     //public DcMotorEx flywheelMotor2;
 
-    public double highVelocity = 800; //ticks*2.142857143 = RPMS
+    public double highVelocity = 1600; //ticks*2.142857143 = RPMS
     public double lowVelocity = 0;
     double curTargetVelocity = highVelocity;
 
@@ -31,7 +31,7 @@ public class FlywheelPFTuner extends OpMode {
 
     @Override
     public void init() {
-        intake.init(hardwareMap);
+        //intake.init(hardwareMap);
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
         nectarFlywheel = hardwareMap.get(DcMotorEx.class, "nectar_flywheel");
         nectarFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -41,7 +41,7 @@ public class FlywheelPFTuner extends OpMode {
 
     @Override
     public void loop() {
-        intake.runIntake(0.1);
+        //intake.runIntake(0.1);
 
         if (gamepad1.triangleWasPressed()) {
             if (curTargetVelocity == highVelocity) {

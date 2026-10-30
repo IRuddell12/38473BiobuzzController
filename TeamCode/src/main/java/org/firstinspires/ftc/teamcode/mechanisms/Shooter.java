@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
 
 public class Shooter {
     private DcMotorEx pollenFlywheel;
@@ -148,7 +150,7 @@ public class Shooter {
     public void setPollenFlywheelSpeed(double speed) {
         pollenFlywheel.setVelocity(speed);
     }
-    public void setNectarFlywheel2Speed(double speed) {
+    public void setNectarFlywheelSpeed(double speed) {
         nectarFlywheel.setVelocity(speed);
     }
 
@@ -172,6 +174,13 @@ public class Shooter {
         return shotsRemaining == 0 && flywheelState == FlywheelState.IDLE;
     }
 
+    public double getAmperagePollen() {
+        return pollenFlywheel.getCurrent(CurrentUnit.AMPS);
+    }
+
+    public double getAmperageNectar() {
+        return nectarFlywheel.getCurrent(CurrentUnit.AMPS);
+    }
     public void setGatePosition(double position) {
         gate.setPosition(position);
     }
