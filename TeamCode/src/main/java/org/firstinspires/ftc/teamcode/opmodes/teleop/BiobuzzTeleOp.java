@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import com.pedropathing.follower.Follower;
+
+import org.firstinspires.ftc.teamcode.mechanisms.Hood;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.math.Pose;
@@ -10,7 +12,6 @@ import com.pedropathing.follower.ManualDrive;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-//import org.firstinspires.ftc.teamcode.mechanisms.HoodAdjuster;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.PoseHolder;
@@ -20,7 +21,7 @@ import org.firstinspires.ftc.teamcode.settings.RobotSettings;
 @TeleOp(name = "Tele-Op")
 public class BiobuzzTeleOp extends OpMode {
     Intake intake = new Intake();
-    //HoodAdjuster hood = new HoodAdjuster();
+    //Hood hood = new Hood();
     private Shooter flywheel = new Shooter();
     private Follower follower;
     //public static Pose startingPoseBlue;
@@ -32,6 +33,9 @@ public class BiobuzzTeleOp extends OpMode {
     double flywheelOffset = 0;
     double targetAngleOffset = 0;
     double kP = 0.4; // proportional constant, tune this
+
+    int gateOpen = 1;
+    int gateClose = 0;
 
     private static final double FIELD_SIZE = 144.0;
 
@@ -68,7 +72,7 @@ public class BiobuzzTeleOp extends OpMode {
         flywheel.init(hardwareMap);
         automatedDrive = false;
 
-        flywheel.setGatePosition(0.5);
+        intake.setGates(gateClose);
 
         telemetry.addData(
                 "Selected Alliance",
@@ -201,7 +205,7 @@ public class BiobuzzTeleOp extends OpMode {
         }
 
         if (gamepad1.b) {
-            flywheel.setGatePosition(0.5);
+            intake.setGates(gateOpen);
         }
 
         telemetry.addData("Distance to Goal", targetDistance);

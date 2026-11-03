@@ -1,16 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.tuning;
 
-import com.pedropathing.api.PoseFactory;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.mechanisms.Hood;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
-import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 @TeleOp(name = "Interpolation Tuner", group = "Tuning")
 public class FlywheelInterpolationTuner extends OpMode {
@@ -20,11 +16,18 @@ public class FlywheelInterpolationTuner extends OpMode {
     Intake intake = new Intake();
     //private Follower follower;
 
-    double gateClosed = 0.15;
-    double gateOpen = 0.8;
-    double pollenFlywheelSpeed = 700;//
-    double nectarFlywheelSpeed = 900;
+    int gateClosed = 0;
+    int gateOpen = 1;
+    double pollenFlywheelSpeed = 1400;//
+    double nectarFlywheelSpeed = 1600;
+
     double intakePower = 1;
+
+    double pollenHoodPos = 0.05;
+    double nectarHoodPos = 0.95;
+
+    double intakeLiftUp = 0;
+    double intakeLiftDown = 0.52;
 
     //private final PoseFactory p = PoseFactory.degrees();
 
@@ -41,9 +44,6 @@ public class FlywheelInterpolationTuner extends OpMode {
         //follower.setPose(startPose);
     }
 
-    double pollenHoodStep = 0;
-    double nectarHoodStep = 1;
-
     @Override
     public void loop() {
 
@@ -52,41 +52,36 @@ public class FlywheelInterpolationTuner extends OpMode {
 
 
         if (gamepad1.b) {
-            shooter.setGatePosition(gateOpen);
+            intake.setGates(gateOpen);
         } else {
-            shooter.setGatePosition(gateClosed);
+            intake.setGates(gateClosed);
         }
-
-//        if (gamepad1.rightBumperWasPressed() && intakePower < 1.0) {
-//            intakePower += 0.05;
-//        }
-
-//        if (gamepad1.left_bumper && intakePower > 0.0) {
-//            intakePower -=0.05;
-//        }
 
         if (gamepad1.right_trigger > 0.3) {
             intake.runIntake(intakePower);
         } else {
             intake.runIntake(0);
+            intake.runTransfers(1.0);
+            intake.setIntakeLift(intakeLiftDown);
         }
 
-        if (gamepad1.dpadUpWasPressed() && pollenHoodStep > 0) {
-            pollenHoodStep -= 0.05;
+        // Pollen hood
+        if (gamepad1.dpadUpWasPressed()) {
+            pollenHoodPos = Range.clip(pollenHoodPos + 0.05, 0, 1);
         }
 
-        if (gamepad1.dpadDownWasPressed() && pollenHoodStep < 1) {
-            pollenHoodStep +=0.05;
+        if (gamepad1.dpadDownWasPressed()) {
+            pollenHoodPos = Range.clip(pollenHoodPos - 0.05, 0, 1);
         }
 
-        if (gamepad1.yWasPressed() && nectarHoodStep < 1) {
-            nectarHoodStep +=0.05;
+// Nectar hood
+        if (gamepad1.triangleWasPressed()) {
+            nectarHoodPos = Range.clip(nectarHoodPos - 0.05, 0, 1);
         }
 
-        if (gamepad1.aWasPressed() && nectarHoodStep > 0) {
-            nectarHoodStep +=0.05;
+        if (gamepad1.crossWasPressed()) {
+            nectarHoodPos = Range.clip(nectarHoodPos + 0.05, 0, 1);
         }
-
 
         if (gamepad1.dpadLeftWasPressed()) {
             pollenFlywheelSpeed -= 10;
@@ -96,11 +91,11 @@ public class FlywheelInterpolationTuner extends OpMode {
             pollenFlywheelSpeed += 10;
         }
 
-        if (gamepad1.x) {
+        if (gamepad1.squareWasPressed()) {
             nectarFlywheelSpeed -= 10;
         }
 
-        if (gamepad1.b) {
+        if (gamepad1.circleWasPressed()) {
             nectarFlywheelSpeed += 10;
         }
 
@@ -116,15 +111,17 @@ public class FlywheelInterpolationTuner extends OpMode {
         double targetHeading = Math.atan2(deltaY, deltaX);
         double targetDistance = Math.hypot(deltaX,deltaY); */
 
-        hood.setNectarHoodPos(nectarHoodStep);
-        hood.setPollenHoodPos(pollenHoodStep);
+        hood.setNectarHoodPos(nectarHoodPos);
+        hood.setPollenHoodPos(pollenHoodPos);
         shooter.setPollenFlywheelSpeed(pollenFlywheelSpeed);
-        shooter.setNectarFlywheelSpeed(pollenFlywheelSpeed);
+        shooter.setNectarFlywheelSpeed(nectarFlywheelSpeed);
 
         //telemetry.addData("Intake Speed", intakePower);
-        telemetry.addData("Pollen Hood Position:", pollenHoodStep);
-        telemetry.addData("Nectar Hood Position:", nectarHoodStep);
+        telemetry.addLine("dpad up and down for pollen, triangle and cross for nectar");
+        telemetry.addData("Pollen Hood Position:", pollenHoodPos);
+        telemetry.addData("Nectar Hood Position:", nectarHoodPos);
         telemetry.addLine();
+        telemetry.addLine("dpad right and left for pollen, square and circle for nectar");
         telemetry.addData("Pollen Flywheel Speed", pollenFlywheelSpeed);
         telemetry.addData("Pollen Flywheel Current", shooter.getAmperagePollen());
         telemetry.addLine();

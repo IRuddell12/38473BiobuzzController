@@ -18,12 +18,12 @@ public class FlywheelPFTuner extends OpMode {
     public DcMotorEx nectarFlywheel;
     //public DcMotorEx flywheelMotor2;
 
-    public double highVelocity = 1600; //ticks*2.142857143 = RPMS
-    public double lowVelocity = 0;
+    public double highVelocity = 1400; //ticks*2.142857143 = RPMS
+    public double lowVelocity = 800;
     double curTargetVelocity = highVelocity;
 
     double F = 13; //13
-    double P = 150; //150
+    double P = 200; //150
 
     double[] stepSizes = {10.0, 1.0, 0.1, 0.001, 0.0001};
 
@@ -33,7 +33,7 @@ public class FlywheelPFTuner extends OpMode {
     public void init() {
         //intake.init(hardwareMap);
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P, 0, 0, F);
-        nectarFlywheel = hardwareMap.get(DcMotorEx.class, "nectar_flywheel");
+        nectarFlywheel = hardwareMap.get(DcMotorEx.class, "pollen_flywheel");
         nectarFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         nectarFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         telemetry.addLine("Init complete");

@@ -42,23 +42,7 @@ public class BiobuzzAuto extends OpMode {
     private Intake intake;
     private LimelightVision limelight;
 
-    private boolean previousLeftBumper = false;
-    private boolean previousRightBumper = false;
-    private boolean previousOptions = false;
-
     private static final double FIELD_SIZE = 144.0;
-
-    private Pose alliancePose(Pose redPose) {
-        if (RobotSettings.allianceColor != RobotSettings.AllianceColor.BLUE) {
-            return redPose;
-        }
-
-        double blueX = FIELD_SIZE - redPose.x();
-        double blueY = FIELD_SIZE - redPose.y();
-        double blueHeading = (redPose.heading() + 180.0) % 360.0;
-
-        return p.of(blueX, blueY, blueHeading);
-    }
 
     private final PoseFactory p = PoseFactory.degrees();
 
@@ -118,55 +102,7 @@ public class BiobuzzAuto extends OpMode {
         limelight.init(hardwareMap);
 
         follower.update();
-
     }
-
-    @Override
-    public void init_loop() {
-        boolean leftBumper = gamepad1.left_bumper;
-        boolean rightBumper = gamepad1.right_bumper;
-        boolean options = gamepad1.options;
-
-        // Options resets the alliance selection.
-        if (options && !previousOptions) {
-            RobotSettings.allianceColor = null;
-        }
-
-        // Select alliance on a new button press.
-        if (leftBumper && !previousLeftBumper) {
-            RobotSettings.allianceColor =
-                    RobotSettings.AllianceColor.BLUE;
-        } else if (rightBumper && !previousRightBumper) {
-            RobotSettings.allianceColor =
-                    RobotSettings.AllianceColor.RED;
-        }
-
-        telemetry.addLine("=== WARRIOR DYNAMICS ===");
-        telemetry.addLine("Select Alliance");
-        telemetry.addLine("Left Bumper: BLUE");
-        telemetry.addLine("Right Bumper: RED");
-        telemetry.addLine("Options: Reset Selection");
-
-        telemetry.addData(
-                "Selected Alliance",
-                RobotSettings.allianceColor == null
-                        ? "NOT SELECTED"
-                        : RobotSettings.allianceColor
-        );
-
-        telemetry.addLine(
-                RobotSettings.allianceColor == null
-                        ? "Select an alliance before starting."
-                        : "Alliance selected."
-        );
-
-        telemetry.update();
-
-        previousLeftBumper = leftBumper;
-        previousRightBumper = rightBumper;
-        previousOptions = options;
-    }
-
 
     @Override
     public void start() {
@@ -175,7 +111,6 @@ public class BiobuzzAuto extends OpMode {
             telemetry.update();
             return;
         }
-
         schedule(autoRoutine());
     }
 
@@ -207,76 +142,75 @@ public class BiobuzzAuto extends OpMode {
         }
     }
 
-
     public Path startToFlower1() {
         return Paths.curve(
-                alliancePose(startPose),
-                alliancePose(startToFlower1Control),
-                alliancePose(flower1Pose)
+                 startPose,
+                 startToFlower1Control,
+                 flower1Pose
         ).heading(Interpolator.piecewise()
                 .until(0.8, Interpolator.linear(
-                        alliancePose(startToFlower1_Segment1Start),
-                        alliancePose(startToFlower1_Segment1End)))
+                         startToFlower1_Segment1Start,
+                         startToFlower1_Segment1End))
                 .until(1, Interpolator.linear(
-                        alliancePose(startToFlower1_Segment2Start),
-                        alliancePose(startToFlower1_Segment2End))));
+                         startToFlower1_Segment2Start,
+                         startToFlower1_Segment2End)));
     }
 
     public Path flower1ToShoot2() {
-        Pose start = alliancePose(flower1Pose);
-        Pose end = alliancePose(shootPose2);
+        Pose start = flower1Pose;
+        Pose end = shootPose2;
 
         return Paths.curve(
                 start,
-                alliancePose(flower1ToShoot2Control1),
-                alliancePose(flower1ToShoot2Control2),
+                flower1ToShoot2Control1,
+                flower1ToShoot2Control2,
                 end
         ).linear(start, end);
     }
 
     public Path shoot2ToFlower2() {
-        Pose start = alliancePose(shootPose2);
-        Pose end = alliancePose(flower2Pose);
+        Pose start = shootPose2;
+        Pose end = flower2Pose;
 
         return Paths.curve(
                 start,
-                alliancePose(shoot2ToFlower2Control),
+                shoot2ToFlower2Control,
                 end
         ).linear(start, end);
     }
 
     public Path flower2ToShoot2() {
-        Pose start = alliancePose(flower2Pose);
-        Pose end = alliancePose(shootPose2);
+        Pose start = flower2Pose;
+        Pose end = shootPose2;
 
         return Paths.curve(
                 start,
-                alliancePose(shoot2ToFlower2Control),
+                shoot2ToFlower2Control,
                 end
         ).linear(start, end);
     }
 
     public Path shoot2ToPark() {
-        Pose start = alliancePose(shootPose2);
-        Pose end = alliancePose(parkPose);
+        Pose start = shootPose2;
+        Pose end = parkPose;
 
         return Paths.line(start, end).linear(start, end);
     }
 
     public Path shoot2Toshoot1() {
-        Pose start = alliancePose(shootPose2);
-        Pose end = alliancePose(shootPose1);
+        Pose start = shootPose2;
+        Pose end = shootPose1;
 
         return Paths.line(start, end).heading(Interpolator.piecewise()
                 .until(0.2, Interpolator.linear(
-                        alliancePose(shootToShoot_Segment1Start),
-                        alliancePose(ShootToShoot_Segment1End)))
+                        (shootToShoot_Segment1Start),
+                        (ShootToShoot_Segment1End)))
                 .until(0.8, Interpolator.linear(
-                        alliancePose(shootToShoot_Segment2Start),
-                        alliancePose(shootToShoot_Segment2End)))
+                        (shootToShoot_Segment2Start),
+                        (shootToShoot_Segment2End)))
                 .until(1, Interpolator.linear(
-                        alliancePose(shootToShoot_Segment3Start),
-                        alliancePose(shootToShoot_Segment3End))));
+                        (shootToShoot_Segment3Start),
+                        (shootToShoot_Segment3End))));
     }
 
 
@@ -331,12 +265,6 @@ public class BiobuzzAuto extends OpMode {
                 parallel(
                         shoot(shooter, 4),
                         setProbe(intake,0))
-        );
-    }
-
-    private Command searchCheckShootTransition() {
-        return sequential(
-
         );
     }
 }

@@ -8,15 +8,20 @@ public class Hood {
     private Servo nectarHood;
     private double pollenCurrentPos = 0.2;
     private double nectarCurrentPos = 0.0;
-    double minRange = 0.05; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION UP!!!
-    double maxRange = 0.95 ; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION DOWN!!!
+    double pollenMinRange = 0; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION UP!!!
+    double pollenMaxRange = .5; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION DOWN!!!
+    double nectarMinRange = 1;
+    double nectarMaxRange = 0.4;
+
 
     public void init(HardwareMap hwMap) {
         pollenHood = hwMap.get(Servo.class, "pollen_hood");
-        pollenHood.scaleRange(minRange, maxRange);
+        pollenHood.scaleRange(pollenMinRange, pollenMaxRange);
+        pollenHood.setPosition(pollenMinRange);
 
         nectarHood = hwMap.get(Servo.class, "nectar_hood");
-        nectarHood.scaleRange(minRange, maxRange);
+        nectarHood.scaleRange(nectarMaxRange, nectarMinRange);
+        nectarHood.setPosition(1);
     }
 
     public void setPollenHoodPos(double pos) {
@@ -32,7 +37,6 @@ public class Hood {
     public double getNectarHoodPos() {
         return pollenCurrentPos;// return last set position
     }
-
     public double getPollenHoodPos() {
         return nectarCurrentPos;
     }
