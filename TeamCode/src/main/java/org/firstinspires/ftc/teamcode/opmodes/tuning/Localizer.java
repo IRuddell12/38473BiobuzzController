@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 public class Localizer extends OpMode {
     private Follower follower;
     private final PoseFactory p = PoseFactory.degrees();
-    private final Pose startPose = p.of(8.85, 8.82, 270);
+    private final Pose startPose = p.of(57.58, 5.80, 90); //8.85, 8.82, 270 corner coordoinates
 
 
     @Override

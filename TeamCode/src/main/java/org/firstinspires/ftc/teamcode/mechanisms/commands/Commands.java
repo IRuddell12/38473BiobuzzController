@@ -12,6 +12,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.mechanisms.LimelightVision;
 
 
+
+
 //-----------------------SHOOTER COMMANDS-----------------------------
 
 public class Commands {
@@ -81,8 +83,6 @@ public class Commands {
     }
 
 //--------------------------LIMELIGHT COMMANDS----------------------------
-
-
 
     public static Command checkRedCellScorable(LimelightVision limelight, double timeoutSeconds, boolean[] scorableResult) {
 

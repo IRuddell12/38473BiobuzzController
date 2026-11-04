@@ -21,14 +21,12 @@ import org.firstinspires.ftc.teamcode.settings.RobotSettings;
 @TeleOp(name = "Tele-Op")
 public class BiobuzzTeleOp extends OpMode {
     Intake intake = new Intake();
-    //Hood hood = new Hood();
+    Hood hood = new Hood();
     private Shooter flywheel = new Shooter();
     private Follower follower;
-    //public static Pose startingPoseBlue;
     private  final PoseFactory p = PoseFactory.degrees();
 
-    private final Pose manualStartPose = p.of(55.54, 8.11, 90);
-    private boolean automatedDrive = false;
+    private final Pose manualStartPose = p.of(57.58, 5.80, 90);
 
     double flywheelOffset = 0;
     double targetAngleOffset = 0;
@@ -37,49 +35,22 @@ public class BiobuzzTeleOp extends OpMode {
     int gateOpen = 1;
     int gateClose = 0;
 
-    private static final double FIELD_SIZE = 144.0;
-
-    private Pose alliancePose(Pose redPose) {
-        if (RobotSettings.allianceColor
-                != RobotSettings.AllianceColor.BLUE) {
-            return redPose;
-        }
-
-        double blueX = FIELD_SIZE - redPose.x();
-        double blueY = FIELD_SIZE - redPose.y();
-
-        // PoseFactory.degrees() expects degrees.
-        double blueHeading =
-                (Math.toDegrees(redPose.heading()) + 180.0) % 360.0;
-
-        return p.of(blueX, blueY, blueHeading);
-    }
-
 
     @Override
     public void init() {
         follower = Constants.create(hardwareMap);
 
         if (PoseHolder.savedPose != null) {
-            // Autonomous already saved the alliance-adjusted pose.
             follower.setPose(PoseHolder.savedPose);
         } else {
-            // Transform the manual starting pose for Blue.
-            follower.setPose(alliancePose(manualStartPose));
+            follower.setPose(manualStartPose);
         }
 
         intake.init(hardwareMap);
         flywheel.init(hardwareMap);
-        automatedDrive = false;
 
         intake.setGates(gateClose);
 
-        telemetry.addData(
-                "Selected Alliance",
-                RobotSettings.allianceColor == null
-                        ? "NOT SELECTED"
-                        : RobotSettings.allianceColor
-        );
         telemetry.update();
 
         telemetry.addData("Starting Pose", PoseHolder.savedPose != null ? "Restored from Autonomous" : "Manual Start Pose");
@@ -104,30 +75,18 @@ public class BiobuzzTeleOp extends OpMode {
         double robotY = robotPose.y();
         double heading = robotPose.heading();
 
-        // Canonical goal coordinates for Red.
-        double redEquivalentY = robotY;
-
-        if (RobotSettings.allianceColor
-                == RobotSettings.AllianceColor.BLUE) {
-            redEquivalentY = FIELD_SIZE - robotY;
-        }
-
 // Select the goal based on the robot's equivalent Red-side position.
-        double redGoalX = 84;
-        double redGoalY = redEquivalentY > 72 ? 84 : 60;
+        double hiveX = 84;
+        double hiveY;
 
-// Convert the selected goal to the active alliance.
-        double xGoal = redGoalX;
-        double yGoal = redGoalY;
-
-        if (RobotSettings.allianceColor
-                == RobotSettings.AllianceColor.BLUE) {
-            xGoal = FIELD_SIZE - redGoalX;
-            yGoal = FIELD_SIZE - redGoalY;
+        if (robotY < 70.75) {
+            hiveY = 58;
+        } else {
+            hiveY = 83.5;
         }
 
-        double deltaX = xGoal - robotX;
-        double deltaY = yGoal - robotY;
+        double deltaX = hiveX - robotX;
+        double deltaY = hiveY - robotY;
 
         double targetDistance =
                 Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -144,11 +103,11 @@ public class BiobuzzTeleOp extends OpMode {
         // Clamp rotate power to max motor speed
         rotatePower = Math.max(-1.0, Math.min(1.0, rotatePower));
 
-//        if (gamepad2.dpadRightWasPressed() && kP < 10.0) {
-//            kP += 0.1;
-//        } else if (gamepad2.dpadLeftWasPressed() && kP > 0.0) {
-//            kP -= 0.1;
-//        }
+        if (gamepad2.dpadRightWasPressed() && kP < 10.0) {
+            kP += 0.1;
+        } else if (gamepad2.dpadLeftWasPressed() && kP > 0.0) {
+            kP -= 0.1;
+        }
 
 //------------------- DRIVER CODE -------------------
 
@@ -190,7 +149,10 @@ public class BiobuzzTeleOp extends OpMode {
 
         //------------------LAUNCHER CODE---------------------
         flywheel.setPollenFlywheelSpeed(Shooter.pollenFlywheelInterpolated(targetDistance)+flywheelOffset);
-//        hood.setHoodPos(Shooter.hoodInterpolated(targetDistance));
+        flywheel.setNectarFlywheelSpeed(Shooter.nectarFlywheelInterpolated(targetDistance)+flywheelOffset);
+
+        hood.setPollenHoodPos(Shooter.pollenHoodInterpolated(targetDistance));
+        hood.setNectarHoodPos(Shooter.nectarHoodInterpolated(targetDistance));
 
         if (gamepad2.dpadUpWasPressed() && flywheelOffset < 100) {
             flywheelOffset += 10;
@@ -198,10 +160,12 @@ public class BiobuzzTeleOp extends OpMode {
             flywheelOffset -= 10;
         }
 
-        if (gamepad2.dpadLeftWasPressed() && targetAngleOffset > -25) {
-            flywheelOffset -= 1.0;
-        } else if (gamepad2.dpadDownWasPressed() &&  targetAngleOffset < 25) {
-            flywheelOffset += 1.0;
+        intake.runTransfers(1.0);
+
+        if (gamepad1.right_trigger > 0.3) {
+            intake.runIntake(1.0);
+        } else {
+            intake.runIntake(0.5);
         }
 
         if (gamepad1.b) {
@@ -213,7 +177,7 @@ public class BiobuzzTeleOp extends OpMode {
         telemetry.addData("X Position", robotX);
         telemetry.addData("Y position", robotY);
         telemetry.addData("Current Heading", Math.toDegrees(heading));
-        telemetry.addData("flywheelOffset", flywheelOffset);
+        telemetry.addData("Flywheel Offset", flywheelOffset);
         telemetry.addData("kP Value", kP);
         telemetry.addData("Target Offset", targetAngleOffset);
     }

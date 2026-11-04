@@ -79,7 +79,7 @@ public class Intake {
     public void runTransfers(double power) {
         nectarAssist.setPower(power);
         pollenTransfer.setPower(power);
-        nectarTransfer.setPower(power);
+        nectarTransfer.setPower(power * 0.7);
     }
 
     public void setIntakeLift(double position) {

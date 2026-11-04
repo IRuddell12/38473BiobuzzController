@@ -59,23 +59,26 @@ public class Shooter {
 
         PIDFCoefficients nectarPidfCoefficients = new PIDFCoefficients(nectarP, 0, 0, nectarF);
         nectarFlywheel = hwMap.get(DcMotorEx.class, "nectar_flywheel");
-        pollenFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        pollenFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, nectarPidfCoefficients);
-        pollenFlywheel.setVelocity(0.0);
+        nectarFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        nectarFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, nectarPidfCoefficients);
+        nectarFlywheel.setVelocity(0.0);
 
         flywheelState = FlywheelState.IDLE;
     }
 
+
     public void update() {
 
-        flywheelVelocity = pollenFlywheel.getVelocity();
+        double pollenVelocity = pollenFlywheel.getVelocity();
+        double nectarVelocity = nectarFlywheel.getVelocity();
 
         switch (flywheelState) {
 
             case IDLE:
                 intake.runIntake(0.5);
+                intake.runTransfers(1.0);
                 intake.setGates(gateClose);
-                pollenFlywheel.setVelocity(pollenShootingVelocity); //set velocity
+                pollenFlywheel.setVelocity(pollenShootingVelocity);
                 nectarFlywheel.setVelocity(nectarShootingVelocity);
 
                 if (shotsRemaining > 0) {
@@ -87,21 +90,30 @@ public class Shooter {
                 break;
 
             case SPIN_UP:
-                //set velocity
+                // Set target velocities
                 pollenFlywheel.setVelocity(pollenShootingVelocity);
                 nectarFlywheel.setVelocity(nectarShootingVelocity);
-                intake.runIntake(1.0);
 
-                if (flywheelVelocity > (pollenShootingVelocity * .95) || (stateTimer.seconds() > flywheelMaxSpinupTime)) {
+                intake.runIntake(1.0);
+                intake.runTransfers(1.0);
+
+                // Check that BOTH flywheels reach 95% of target velocity
+                boolean bothFlywheelsReady =
+                        pollenVelocity >= (pollenShootingVelocity * 0.95) &&
+                                nectarVelocity >= (nectarShootingVelocity * 0.95);
+
+                if (bothFlywheelsReady ||
+                        stateTimer.seconds() > flywheelMaxSpinupTime) {
+
                     intake.runIntake(1.0);
                     stateTimer.reset();
-                    flywheelState = flywheelState.FEEDING;
+                    flywheelState = FlywheelState.FEEDING;
                 }
                 break;
 
-
             case FEEDING:
                 intake.setGates(gateOpen);
+                intake.runTransfers(1.0);
 
                 if (shotsRemaining > 0) {
                     intake.runIntake(1.0);
@@ -122,6 +134,7 @@ public class Shooter {
             case SHUTDOWN:
                 intake.setGates(gateClose);
                 intake.runIntake(0.5);
+                intake.runTransfers(1.0);
 
                 if (stateTimer.seconds() > 0.2) {
                     flywheelState = FlywheelState.IDLE;
@@ -129,6 +142,7 @@ public class Shooter {
                 break;
         }
     }
+
 
     public void fireShots(int numberOfShots) {
         if (flywheelState == FlywheelState.IDLE) {

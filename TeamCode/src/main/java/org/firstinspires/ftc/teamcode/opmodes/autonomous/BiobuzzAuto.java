@@ -42,21 +42,19 @@ public class BiobuzzAuto extends OpMode {
     private Intake intake;
     private LimelightVision limelight;
 
-    private static final double FIELD_SIZE = 144.0;
-
     private final PoseFactory p = PoseFactory.degrees();
 
-    private final Pose startPose = p.of(55.1914, 8.8086, 90);
-    private final Pose flower1Pose = p.of(11.7307, 47.32, 180);
-    private final Pose startToFlower1Control = p.of(31.0921, 49.9236, 0);
-    private final Pose startToFlower1_Segment1Start = p.of(11.7307, 47.32, 270);
-    private final Pose startToFlower1_Segment1End = p.of(11.7307, 47.32, 180);
-    private final Pose startToFlower1_Segment2Start = p.of(11.7307, 47.32, 180);
-    private final Pose startToFlower1_Segment2End = p.of(11.7307, 47.32, 180);
+    private final Pose startPose = p.of(57.58, 5.80, 90);
+    private final Pose flower1Pose = p.of(14.42, 43.96, 360);
+    private final Pose startToFlower1Control = p.of(30, 50, 0);
+    private final Pose startToFlower1_Segment1Start = p.of(14.42, 43.96, 270);
+    private final Pose startToFlower1_Segment1End = p.of(14.42, 43.96, 180);
+    private final Pose startToFlower1_Segment2Start = p.of(14.42, 43.96, 180);
+    private final Pose startToFlower1_Segment2End = p.of(14.42, 43.96, 180);
 
 
-    private final Pose shootPose1 = p.of(58, 24, 270);
-    private final Pose shootPose2 = p.of(58, 118, 110);
+    private final Pose shootPose1 = p.of(58, 24, 90);
+    private final Pose shootPose2 = p.of(58, 120, 270);
     private final Pose flower1ToShoot2Control1 = p.of(34, 48, 0);
     private final Pose flower1ToShoot2Control2 = p.of(18, 110, 0);
 
@@ -69,10 +67,10 @@ public class BiobuzzAuto extends OpMode {
     private final Pose shootToShoot_Segment3Start = p.of(58, 24, 180);
     private final Pose shootToShoot_Segment3End = p.of(58, 24, 270);
 
-    private final Pose flower2Pose = p.of(47.2343, 129.5021, 90);
-    private final Pose parkPose = p.of(15.5179, 110.09, 270);
+    private final Pose flower2Pose = p.of(49.46, 127.21, 270);
+    private final Pose parkPose = p.of(19.11, 116.60, 90);
 
-    private final double flowerIntakeTimeout = 2.0;
+    private final double flowerIntakeTimeout = 3.0;
 
     // Autonomous routine
     public Command autoRoutine() {
@@ -227,8 +225,7 @@ public class BiobuzzAuto extends OpMode {
     }
 
     private Command shootPreloads() {
-        return sequential(shoot(shooter, 4)
-        );
+        return sequential(shoot(shooter, 4));
     }
 
     private Command waitForFullCapacity() {
@@ -248,6 +245,7 @@ public class BiobuzzAuto extends OpMode {
                         follow(follower, startToFlower1()),
                         runAtProgress(follower, intake, .8, 1, 1)),
                 parallel(
+                        runIntake(intake, 0.2),
                         follow(follower, flower1ToShoot2()),
                         runAtProgress(follower, intake, .2, 0, 0)),
                 shoot(shooter, 4)
@@ -264,7 +262,8 @@ public class BiobuzzAuto extends OpMode {
                 follow(follower, flower2ToShoot2()),
                 parallel(
                         shoot(shooter, 4),
-                        setProbe(intake,0))
+                        setProbe(intake,0)),
+                        runIntake(intake, 0.2)
         );
     }
 }
