@@ -176,22 +176,22 @@ public class Shooter {
 
     //Pollen Interpolation, input math equation from data into the Math.min() section
     public static double pollenFlywheelInterpolated(double distanceGoal) {
-        return Math.max(0, Math.min(1700, 0.0284842*Math.pow(distanceGoal,2) + 1.37825*distanceGoal+878.94372));
+        return Math.max(0, Math.min(1300, 0.0115741*Math.pow(distanceGoal,3) - 1.31944*Math.pow(distanceGoal, 2)+50*distanceGoal+606));
     }
 
     //Nectar Flywheel interpolation, input math equation from data into the Math.min() section
     public static double nectarFlywheelInterpolated(double distanceGoal) {
-        return Math.max(0, Math.min(1700, 0.0284842*Math.pow(distanceGoal,2) + 1.37825*distanceGoal+878.94372));
+        return Math.max(0, Math.min(1350, -0.0270062*Math.pow(distanceGoal,3) + 3.44246*Math.pow(distanceGoal, 2)-140.27778*distanceGoal+3099.14286));
     }
 
     //Pollen Hood interpolation, input math equation from data into the Math.min() section
     public static double pollenHoodInterpolated(double distanceGoal) {
-        return Math.max(0.0, Math.min(1.0, 0.000000222478*Math.pow(distanceGoal,3)-0.0000690144*Math.pow(distanceGoal, 2)+0.0029916*distanceGoal+0.75755));
+        return Math.max(0.0, Math.min(0.45, -0.01*distanceGoal+0.76));
     }
 
     //Nectar Hood interpolation, input math equation from data into the Math.min() section
     public static double nectarHoodInterpolated(double distanceGoal) {
-        return Math.max(0.0, Math.min(1.0, 0.000000222478*Math.pow(distanceGoal,3)-0.0000690144*Math.pow(distanceGoal, 2)+0.0029916*distanceGoal+0.75755));
+        return Math.max(0.0, Math.min(0.85, -0.0000192901*Math.pow(distanceGoal,3) + 0.00213294*Math.pow(distanceGoal, 2)-0.0638889*distanceGoal+1.07143));
     }
 
     public boolean isDoneShooting() {

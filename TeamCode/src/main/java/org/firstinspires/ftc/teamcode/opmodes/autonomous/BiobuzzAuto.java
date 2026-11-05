@@ -40,7 +40,7 @@ public class BiobuzzAuto extends OpMode {
     private Follower follower;
     private Shooter shooter;
     private Intake intake;
-    private LimelightVision limelight;
+    //private LimelightVision limelight;
 
     private final PoseFactory p = PoseFactory.degrees();
 
@@ -96,8 +96,8 @@ public class BiobuzzAuto extends OpMode {
         intake = new Intake();
         intake.init(hardwareMap);
 
-        limelight = new LimelightVision();
-        limelight.init(hardwareMap);
+//        limelight = new LimelightVision();
+//        limelight.init(hardwareMap);
 
         follower.update();
     }
@@ -115,7 +115,7 @@ public class BiobuzzAuto extends OpMode {
     public void loop(){
             follower.update();
             shooter.update();
-            limelight.update();
+            //limelight.update();
             intake.updateIntakeDetection();
             Scheduler.execute();
 
@@ -212,17 +212,17 @@ public class BiobuzzAuto extends OpMode {
     }
 
 
-    private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
-        boolean[] scorable = {false};
-        return sequential(
-                checkRedCellScorable(limelight, timeoutSeconds, scorable),
-
-                conditional(() -> scorable[0],
-                        shoot(shooter, numberOfShots),
-                        Command.build().setDone(() -> true)
-                )
-        );
-    }
+//    private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
+//        boolean[] scorable = {false};
+//        return sequential(
+//                checkRedCellScorable(limelight, timeoutSeconds, scorable),
+//
+//                conditional(() -> scorable[0],
+//                        shoot(shooter, numberOfShots),
+//                        Command.build().setDone(() -> true)
+//                )
+//        );
+//    }
 
     private Command shootPreloads() {
         return sequential(shoot(shooter, 4));

@@ -9,9 +9,9 @@ public class Hood {
     private double pollenCurrentPos = 0.2;
     private double nectarCurrentPos = 0.0;
     double pollenMinRange = 0; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION UP!!!
-    double pollenMaxRange = .5; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION DOWN!!!
+    double pollenMaxRange = .7; //SET THIS VALUE FOR THE FARTHEST RANGE OF MOTION DOWN!!!
     double nectarMinRange = 1;
-    double nectarMaxRange = 0.4;
+    double nectarMaxRange = 0.35;
 
 
     public void init(HardwareMap hwMap) {
