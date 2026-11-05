@@ -16,12 +16,12 @@ public class Hood {
 
     public void init(HardwareMap hwMap) {
         pollenHood = hwMap.get(Servo.class, "pollen_hood");
-        //pollenHood.scaleRange(pollenMinRange, pollenMaxRange);
+        pollenHood.scaleRange(pollenMinRange, pollenMaxRange);
         pollenHood.setPosition(pollenMinRange);
 
         nectarHood = hwMap.get(Servo.class, "nectar_hood");
-        //nectarHood.scaleRange(nectarMaxRange, nectarMinRange);
-        nectarHood.setPosition(1);
+        nectarHood.scaleRange(nectarMaxRange, nectarMinRange);
+        nectarHood.setPosition(nectarMinRange);
     }
 
     public void setPollenHoodPos(double pos) {
