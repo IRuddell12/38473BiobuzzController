@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
@@ -43,8 +42,8 @@ public class Shooter {
 
     //---------FLYWHEEL CONSTANTS----------
     private int shotsRemaining = 0;
-    private double pollenShootingVelocity = 1270;
-    private double nectarShootingVelocity = 1300;
+    private double pollenTargetVelocity = 1270;
+    private double nectarTargetVelocity = 1300;
     private double flywheelMaxSpinupTime = .25;
 
     //---------THROUGHPUT CONSTANTS----------
@@ -83,12 +82,12 @@ public class Shooter {
                 intake.runIntake(0.5);
                 intake.runTransfers(1.0);
                 intake.setGates(gateClose);
-                pollenFlywheel.setVelocity(pollenShootingVelocity);
-                nectarFlywheel.setVelocity(nectarShootingVelocity);
+                pollenFlywheel.setVelocity(pollenTargetVelocity);
+                nectarFlywheel.setVelocity(nectarTargetVelocity);
 
                 if (shotsRemaining > 0) {
-                    pollenFlywheel.setVelocity(pollenShootingVelocity);
-                    nectarFlywheel.setVelocity(nectarShootingVelocity);
+                    pollenFlywheel.setVelocity(pollenTargetVelocity);
+                    nectarFlywheel.setVelocity(nectarTargetVelocity);
                     stateTimer.reset();
                     flywheelState = FlywheelState.SPIN_UP;
                 }
@@ -96,16 +95,15 @@ public class Shooter {
 
             case SPIN_UP:
                 // Set target velocities
-                pollenFlywheel.setVelocity(pollenShootingVelocity);
-                nectarFlywheel.setVelocity(nectarShootingVelocity);
+                pollenFlywheel.setVelocity(pollenTargetVelocity);
+                nectarFlywheel.setVelocity(nectarTargetVelocity);
 
                 intake.runIntake(1.0);
                 intake.runTransfers(1.0);
 
                 // Check that BOTH flywheels reach 95% of target velocity
                 boolean bothFlywheelsReady =
-                        pollenVelocity >= (pollenShootingVelocity * 0.95) &&
-                                nectarVelocity >= (nectarShootingVelocity * 0.95);
+                        pollenVelocity >= (pollenTargetVelocity * 0.95) && nectarVelocity >= (nectarTargetVelocity * 0.95);
 
                 if (bothFlywheelsReady ||
                         stateTimer.seconds() > flywheelMaxSpinupTime) {
@@ -167,10 +165,11 @@ public class Shooter {
 
     //tells the motor to run at the inputted value with a broken down function: setFlywheelSpeed(x)
     public void setPollenFlywheelSpeed(double speed) {
-        pollenFlywheel.setVelocity(speed);
+        pollenTargetVelocity = speed;
     }
+
     public void setNectarFlywheelSpeed(double speed) {
-        nectarFlywheel.setVelocity(speed);
+        nectarTargetVelocity = speed;
     }
 
     //Interpolation for flywheels and corresponding hoods. Use data from Desmos, input distance to goals and working values using the flywheel interpolation tuner

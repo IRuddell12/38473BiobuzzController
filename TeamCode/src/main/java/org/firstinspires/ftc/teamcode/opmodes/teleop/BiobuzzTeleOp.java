@@ -74,7 +74,6 @@ public class BiobuzzTeleOp extends OpMode {
         follower.update();
         Pose robotPose = follower.pose();
 
-
         //---------ROBOT TARGET HEADING CODE (SUBSET OF DRIVER CODE)---------
         //Calculates heading of robot based on Goal and adjusts
         double robotX = robotPose.x();
@@ -82,13 +81,32 @@ public class BiobuzzTeleOp extends OpMode {
         double heading = robotPose.heading();
 
 // Select the goal based on the robot's equivalent Red-side position.
-        double hiveX = 60;
+        double hiveX = 58;
         double hiveY;
 
-        if (robotY < 70.75) {
-            hiveY = 52;
+        if (robotY > 70) {
+            hiveY = 86;
+
+            if (gamepad2.dpadLeftWasPressed()) {
+                hiveY += 6;
+            } else if (gamepad2.dpadRightWasPressed()) {
+                hiveY -= 6;
+            }
+
         } else {
-            hiveY = 88;
+            hiveY = 54;
+
+            if (gamepad2.dpadLeftWasPressed()) {
+                hiveY -= 6;
+            } else if (gamepad2.dpadRightWasPressed()) {
+                hiveY += 6;
+            }
+        }
+
+        if (gamepad2.dpadUpWasPressed()) {
+            hiveX += 6;
+        } else if (gamepad2.dpadDownWasPressed()) {
+            hiveX -= 6;
         }
 
         double deltaX = hiveX - robotX;
@@ -108,12 +126,6 @@ public class BiobuzzTeleOp extends OpMode {
         double rotatePower = kP * headingError;
         // Clamp rotate power to max motor speed
         rotatePower = Math.max(-1.0, Math.min(1.0, rotatePower));
-
-        if (gamepad2.dpadRightWasPressed() && kP < 10.0) {
-            kP += 0.1;
-        } else if (gamepad2.dpadLeftWasPressed() && kP > 0.0) {
-            kP -= 0.1;
-        }
 
 //------------------- DRIVER CODE -------------------
         double forward = -gamepad1.left_stick_y;
@@ -159,15 +171,21 @@ public class BiobuzzTeleOp extends OpMode {
         hood.setPollenHoodPos(Shooter.pollenHoodInterpolated(targetDistance));
         hood.setNectarHoodPos(Shooter.nectarHoodInterpolated(targetDistance));
 
-        if (gamepad2.dpadUpWasPressed() && flywheelOffset < 100) {
+        if (gamepad2.rightBumperWasPressed() && flywheelOffset < 100) {
             flywheelOffset += 10;
-        } else if (gamepad2.dpadDownWasPressed() &&  flywheelOffset > 0) {
+        } else if (gamepad2.leftBumperWasPressed() &&  flywheelOffset > 0) {
             flywheelOffset -= 10;
         }
 
         intake.runTransfers(1.0);
-        intake.runIntake(1.0);
-        intake.setIntakeLift(0.55);
+
+        if (gamepad1.dpadUpWasPressed()) {
+            intake.runIntake(-0.5);
+            intake.setIntakeLift(0.0);
+        } else {
+            intake.runIntake(1.0);
+            intake.setIntakeLift(0.55);
+        }
 
         if (gamepad1.circle) {
             intake.setGates(gateOpen);

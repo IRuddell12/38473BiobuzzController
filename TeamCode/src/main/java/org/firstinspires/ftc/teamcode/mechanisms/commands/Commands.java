@@ -37,12 +37,16 @@ public class Commands {
     }
 
     //Sets the flywheel velocity
-    public static Command setFlywheelSpeed(
+    public static Command setFlywheelSpeeds(
             Shooter shooter,
-            double velocity) {
-
+            double pollenVelocity,
+            double nectarVelocity
+    ) {
         return Command.build()
-                .setStart(() -> shooter.setPollenFlywheelSpeed(velocity))
+                .setStart(() -> {
+                    shooter.setPollenFlywheelSpeed(pollenVelocity);
+                    shooter.setNectarFlywheelSpeed(nectarVelocity);
+                })
                 .setDone(() -> true)
                 .requiring(shooter);
     }

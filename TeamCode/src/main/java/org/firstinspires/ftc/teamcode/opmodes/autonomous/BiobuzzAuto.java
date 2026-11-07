@@ -87,7 +87,7 @@ public class BiobuzzAuto extends OpMode {
 
                 runCycle2(),
 
-                parallel(follow(follower, shoot2ToPark()))
+                park()
         );
     }
 
@@ -226,34 +226,32 @@ public class BiobuzzAuto extends OpMode {
 //    }
 
 
-
+    private Command setHoodAngles(double nectarAngle, double pollenAngle) {
+        return instant(() -> shooter.setHoodAngles(pollenAngle, nectarAngle));
+    }
 
     private Command shootPreloads() {
         return sequential(
-                setHoodAngles(nectarHoodAngle, 0.5),
+                setFlywheelSpeeds(shooter, 1280, 0),
                 shoot(shooter, 4));
-    }
-
-    private Command setHoodAngles(double nectarAngle, double pollenAngle) {
-        return instant(() -> shooter.setHoodAngles(pollenAngle, nectarAngle));
     }
 
     private Command runCycle1() {
         return sequential(
                 parallel(
-                        setProbe(intake, probeDown),
+                        setProbeAtProgress(follower, intake, 0.5, probeDown),
                         follow(follower, startToFlower1()),
                         setIntakeLift(intake, intakeLiftDown)
                 ),
-
                 // Wait at flower 1
                 waitMs(flowerIntakeTimeout),
 
                 parallel(
-                        setProbe(intake, probeUp),
+                        setProbeAtProgress(follower, intake, 0.3, probeUp),
+                        setHoodAngles(nectarHoodAngle, 0.4),
                         follow(follower, flower1ToShoot2())
                 ),
-
+                setFlywheelSpeeds(shooter, 1250, 0),
                 shoot(shooter, 4)
         );
     }
@@ -266,7 +264,7 @@ public class BiobuzzAuto extends OpMode {
                 ),
 
                 // Wait at flower 2
-                waitMs(4000),
+                waitMs(flowerIntakeTimeout),
 
                 follow(follower, flower2ToShoot2()),
                 setHoodAngles(nectarHoodAngle, 0.4),
@@ -275,6 +273,12 @@ public class BiobuzzAuto extends OpMode {
                         shoot(shooter, 4),
                         setProbe(intake, probeDown)
                 )
+        );
+    }
+
+    private Command park() {
+        return parallel(
+                follow(follower, shoot2ToPark())
         );
     }
     //    private Command waitForFullCapacity() {

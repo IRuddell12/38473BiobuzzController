@@ -106,8 +106,8 @@ public class FlywheelInterpolationTuner extends OpMode {
         double robotX = robotPose.x();
         double robotY = robotPose.y();
 
-        double xGoal = 55;
-        double yGoal = 58;
+        double xGoal = 58;
+        double yGoal = 54;
 
         double deltaX = xGoal - robotX;
         double deltaY = yGoal - robotY;
