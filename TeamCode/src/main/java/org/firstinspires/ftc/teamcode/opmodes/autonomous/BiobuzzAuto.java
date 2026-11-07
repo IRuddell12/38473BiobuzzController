@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes.autonomous;
 
-import org.firstinspires.ftc.teamcode.settings.RobotSettings;
 import com.pedropathing.api.Paths;
 
 import com.pedropathing.api.PoseFactory;
@@ -10,11 +9,9 @@ import com.pedropathing.paths.Path;
 
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
-import static com.pedropathing.ivy.commands.Commands.conditional;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
-import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.groups.Groups.parallel;
 
@@ -45,39 +42,51 @@ public class BiobuzzAuto extends OpMode {
     private final PoseFactory p = PoseFactory.degrees();
 
     private final Pose startPose = p.of(57.58, 5.80, 90);
-    private final Pose flower1Pose = p.of(14.42, 43.96, 360);
+    private final Pose flower1Pose = p.of(14.42, 43, 0);
     private final Pose startToFlower1Control = p.of(30, 50, 0);
-    private final Pose startToFlower1_Segment1Start = p.of(14.42, 43.96, 270);
-    private final Pose startToFlower1_Segment1End = p.of(14.42, 43.96, 180);
-    private final Pose startToFlower1_Segment2Start = p.of(14.42, 43.96, 180);
-    private final Pose startToFlower1_Segment2End = p.of(14.42, 43.96, 180);
+    private final Pose startToFlower1_Segment1Start = p.of(14.42, 43, 90);
+    private final Pose startToFlower1_Segment1End = p.of(14.42, 43, 0);
+    private final Pose startToFlower1_Segment2Start = p.of(14.42, 43, 0);
+    private final Pose startToFlower1_Segment2End = p.of(14.42, 43, 0);
 
 
-    private final Pose shootPose1 = p.of(58, 24, 90);
+    //private final Pose shootPose1 = p.of(58, 24, 90);
     private final Pose shootPose2 = p.of(58, 120, 270);
     private final Pose flower1ToShoot2Control1 = p.of(34, 48, 0);
     private final Pose flower1ToShoot2Control2 = p.of(18, 110, 0);
 
     private final Pose shoot2ToFlower2Control = p.of(47, 118, 0);
 
-    private final Pose shootToShoot_Segment1Start = p.of(58, 24, 90);
+    /*private final Pose shootToShoot_Segment1Start = p.of(58, 24, 90);
     private final Pose ShootToShoot_Segment1End = p.of(58, 24, 180);
     private final Pose shootToShoot_Segment2Start = p.of(58, 24, 180);
     private final Pose shootToShoot_Segment2End = p.of(58, 24, 180);
     private final Pose shootToShoot_Segment3Start = p.of(58, 24, 180);
     private final Pose shootToShoot_Segment3End = p.of(58, 24, 270);
+     */
 
-    private final Pose flower2Pose = p.of(49.46, 127.21, 270);
+    private final Pose flower2Pose = p.of(55, 120, 270);
     private final Pose parkPose = p.of(19.11, 116.60, 90);
 
-    private final double flowerIntakeTimeout = 3.0;
+    private final double flowerIntakeTimeout = 2500; //This is MS, 1000 for 1 second
+
+    private double pollenHoodAngle = 0.35;
+    private double nectarHoodAngle = 0.75;
+
+    double intakeLiftUp = 0;
+    double intakeLiftDown = 0.52;
+    int probeUp = 0;
+    int probeDown = 1;
 
     // Autonomous routine
     public Command autoRoutine() {
         return sequential(
                 shootPreloads(),
+
                 runCycle1(),
+
                 runCycle2(),
+
                 parallel(follow(follower, shoot2ToPark()))
         );
     }
@@ -90,25 +99,26 @@ public class BiobuzzAuto extends OpMode {
         follower = Constants.create(hardwareMap);
         follower.setPose(startPose);
 
-        shooter = new Shooter();
-        shooter.init(hardwareMap);
-
         intake = new Intake();
         intake.init(hardwareMap);
 
+        shooter = new Shooter();
+        shooter.setIntake(intake);
+        shooter.init(hardwareMap);
+        shooter.setHoodAngles(pollenHoodAngle, nectarHoodAngle);
+
 //        limelight = new LimelightVision();
 //        limelight.init(hardwareMap);
+
+        intake.setIntakeLift(intakeLiftUp);
+        intake.setProbe(probeUp);
+
 
         follower.update();
     }
 
     @Override
     public void start() {
-        if (RobotSettings.allianceColor == null) {
-            telemetry.addLine("Select an alliance first.");
-            telemetry.update();
-            return;
-        }
         schedule(autoRoutine());
     }
 
@@ -116,8 +126,12 @@ public class BiobuzzAuto extends OpMode {
             follower.update();
             shooter.update();
             //limelight.update();
-            intake.updateIntakeDetection();
+            //intake.updateIntakeDetection();
             Scheduler.execute();
+
+        telemetry.addData("Completion", follower.completion());
+        telemetry.addData("Parametric Progress",
+                follower.parametricCompletion());
 
             PoseHolder.savedPose = follower.pose();
 
@@ -195,24 +209,86 @@ public class BiobuzzAuto extends OpMode {
         return Paths.line(start, end).linear(start, end);
     }
 
-    public Path shoot2Toshoot1() {
-        Pose start = shootPose2;
-        Pose end = shootPose1;
+//    public Path shoot2Toshoot1() {
+//        Pose start = shootPose2;
+//        Pose end = shootPose1;
+//
+//        return Paths.line(start, end).heading(Interpolator.piecewise()
+//                .until(0.2, Interpolator.linear(
+//                        (shootToShoot_Segment1Start),
+//                        (ShootToShoot_Segment1End)))
+//                .until(0.8, Interpolator.linear(
+//                        (shootToShoot_Segment2Start),
+//                        (shootToShoot_Segment2End)))
+//                .until(1, Interpolator.linear(
+//                        (shootToShoot_Segment3Start),
+//                        (shootToShoot_Segment3End))));
+//    }
 
-        return Paths.line(start, end).heading(Interpolator.piecewise()
-                .until(0.2, Interpolator.linear(
-                        (shootToShoot_Segment1Start),
-                        (ShootToShoot_Segment1End)))
-                .until(0.8, Interpolator.linear(
-                        (shootToShoot_Segment2Start),
-                        (shootToShoot_Segment2End)))
-                .until(1, Interpolator.linear(
-                        (shootToShoot_Segment3Start),
-                        (shootToShoot_Segment3End))));
+
+
+
+    private Command shootPreloads() {
+        return sequential(
+                setHoodAngles(nectarHoodAngle, 0.5),
+                shoot(shooter, 4));
     }
 
+    private Command setHoodAngles(double nectarAngle, double pollenAngle) {
+        return instant(() -> shooter.setHoodAngles(pollenAngle, nectarAngle));
+    }
 
-//    private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
+    private Command runCycle1() {
+        return sequential(
+                parallel(
+                        setProbe(intake, probeDown),
+                        follow(follower, startToFlower1()),
+                        setIntakeLift(intake, intakeLiftDown)
+                ),
+
+                // Wait at flower 1
+                waitMs(flowerIntakeTimeout),
+
+                parallel(
+                        setProbe(intake, probeUp),
+                        follow(follower, flower1ToShoot2())
+                ),
+
+                shoot(shooter, 4)
+        );
+    }
+
+    private Command runCycle2() {
+        return sequential(
+                parallel(
+                        setProbe(intake, probeDown),
+                        follow(follower, shoot2ToFlower2())
+                ),
+
+                // Wait at flower 2
+                waitMs(4000),
+
+                follow(follower, flower2ToShoot2()),
+                setHoodAngles(nectarHoodAngle, 0.4),
+
+                parallel(
+                        shoot(shooter, 4),
+                        setProbe(intake, probeDown)
+                )
+        );
+    }
+    //    private Command waitForFullCapacity() {
+//        ElapsedTime timer = new ElapsedTime();
+//
+//        return Command.build()
+//                .setStart(timer::reset)
+//                .setDone(() ->
+//                        intake.isFull()
+//                                || timer.seconds() >= flowerIntakeTimeout
+//                );
+//    }
+
+    //    private Command checkThenShoot(int numberOfShots, double timeoutSeconds) {
 //        boolean[] scorable = {false};
 //        return sequential(
 //                checkRedCellScorable(limelight, timeoutSeconds, scorable),
@@ -223,47 +299,4 @@ public class BiobuzzAuto extends OpMode {
 //                )
 //        );
 //    }
-
-    private Command shootPreloads() {
-        return sequential(shoot(shooter, 4));
-    }
-
-    private Command waitForFullCapacity() {
-        ElapsedTime timer = new ElapsedTime();
-
-        return Command.build()
-                .setStart(timer::reset)
-                .setDone(() ->
-                        intake.isFull()
-                                || timer.seconds() >= flowerIntakeTimeout
-                );
-    }
-
-    private Command runCycle1() {
-        return sequential(
-                parallel(
-                        follow(follower, startToFlower1()),
-                        runAtProgress(follower, intake, .8, 1, 1)),
-                parallel(
-                        runIntake(intake, 0.2),
-                        follow(follower, flower1ToShoot2()),
-                        runAtProgress(follower, intake, .2, 0, 0)),
-                shoot(shooter, 4)
-        );
-    }
-
-    private Command runCycle2() {
-        return sequential(
-                parallel(
-                        follow(follower, shoot2ToFlower2()),
-                        runIntake(intake, 1),
-                        setProbe(intake, 1)),
-                waitForFullCapacity(),
-                follow(follower, flower2ToShoot2()),
-                parallel(
-                        shoot(shooter, 4),
-                        setProbe(intake,0)),
-                        runIntake(intake, 0.2)
-        );
-    }
 }

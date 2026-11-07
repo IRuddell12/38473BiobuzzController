@@ -62,23 +62,42 @@ public class Commands {
         return instant(() -> intake.setProbe(position));
     }
 
+    public static Command setIntakeLift(Intake intake, double position) {
+        return instant(() -> intake.setIntakeLift(position));
+    }
 //------------------SPECIAL AUTO COMMANDS-----------------------------
 
-    public static Command runAtProgress(
+    public static Command setProbeAtProgress(
             Follower follower,
             Intake intake,
             double progressThreshold,
-            double intakePower,
             int probeValue
     ) {
+        boolean[] pathStarted = {false};
+        boolean[] triggered = {false};
+
         return Command.build()
+                .setStart(() -> {
+                    pathStarted[0] = false;
+                    triggered[0] = false;
+                })
                 .setExecute(() -> {
-                    if (follower.completion() >= progressThreshold) {
+
+                    // Wait until the new path actually starts
+                    if (follower.isBusy()) {
+                        pathStarted[0] = true;
+                    }
+
+                    // Trigger once the desired progress is reached
+                    if (pathStarted[0]
+                            && !triggered[0]
+                            && follower.parametricCompletion() >= progressThreshold) {
+
                         intake.setProbe(probeValue);
-                        intake.runIntake(intakePower);
+                        triggered[0] = true;
                     }
                 })
-                .setDone(() -> follower.completion() >= progressThreshold)
+                .setDone(() -> pathStarted[0] && !follower.isBusy())
                 .requiring(intake);
     }
 

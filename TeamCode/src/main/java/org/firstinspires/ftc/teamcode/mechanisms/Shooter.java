@@ -14,7 +14,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 public class Shooter {
     private DcMotorEx pollenFlywheel;
     private DcMotorEx nectarFlywheel;
-    Intake intake = new Intake();
+    private Intake intake;
+    Hood hood = new Hood();
+
     double pollenF = 13;
     double pollenP = 200;
     double nectarF = 13.95;
@@ -34,15 +36,15 @@ public class Shooter {
 
     private FlywheelState flywheelState;
 
+
     //----------GATE CONSTANTS----------
     private double gateCloseAngle = 0;
     private double gateOpenAngle = 0.5;
 
     //---------FLYWHEEL CONSTANTS----------
     private int shotsRemaining = 0;
-    private double flywheelVelocity = 0;
-    private double pollenShootingVelocity = 1400;
-    private double nectarShootingVelocity = 1600;
+    private double pollenShootingVelocity = 1270;
+    private double nectarShootingVelocity = 1300;
     private double flywheelMaxSpinupTime = .25;
 
     //---------THROUGHPUT CONSTANTS----------
@@ -62,6 +64,9 @@ public class Shooter {
         nectarFlywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         nectarFlywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, nectarPidfCoefficients);
         nectarFlywheel.setVelocity(0.0);
+
+        hood = new Hood();
+        hood.init(hwMap);
 
         flywheelState = FlywheelState.IDLE;
     }
@@ -145,13 +150,10 @@ public class Shooter {
 
 
     public void fireShots(int numberOfShots) {
-        if (flywheelState == FlywheelState.IDLE) {
+        if (flywheelState == FlywheelState.IDLE && numberOfShots > 0) {
             shotsRemaining = numberOfShots;
+            stateTimer.reset();
         }
-    }
-
-    public void launch() {
-        intake.setGates(gateOpen);
     }
 
     public void cancelShooting() {
@@ -196,6 +198,15 @@ public class Shooter {
 
     public boolean isDoneShooting() {
         return shotsRemaining == 0 && flywheelState == FlywheelState.IDLE;
+    }
+
+    public void setHoodAngles(double pollenAngle, double nectarAngle) {
+        hood.setPollenHoodPos(pollenAngle);
+        hood.setNectarHoodPos(nectarAngle);
+    }
+
+    public void setIntake(Intake intake) {
+        this. intake = intake;
     }
 
     public double getAmperagePollen() {

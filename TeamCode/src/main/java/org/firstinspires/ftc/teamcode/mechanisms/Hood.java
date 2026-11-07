@@ -33,12 +33,5 @@ public class Hood {
         nectarCurrentPos = pos;
         nectarHood.setPosition(pos);
     }
-
-    public double getNectarHoodPos() {
-        return pollenCurrentPos;// return last set position
-    }
-    public double getPollenHoodPos() {
-        return nectarCurrentPos;
-    }
 }
 

@@ -15,14 +15,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.PoseHolder;
-import org.firstinspires.ftc.teamcode.settings.RobotSettings;
 
 //@Disabled
 @TeleOp(name = "Tele-Op")
 public class BiobuzzTeleOp extends OpMode {
     Intake intake = new Intake();
     Hood hood = new Hood();
-    private Shooter flywheel = new Shooter();
+    private Shooter shooter = new Shooter();
     private Follower follower;
     private  final PoseFactory p = PoseFactory.degrees();
 
@@ -30,10 +29,13 @@ public class BiobuzzTeleOp extends OpMode {
 
     double flywheelOffset = 0;
     double targetAngleOffset = 0;
-    double kP = 0.4; // proportional constant, tune this
+    double kP = 0.5; // proportional constant, tune this
 
     int gateOpen = 1;
     int gateClose = 0;
+
+    int probeUp = 0;
+    int probeDown = 1;
 
 
     @Override
@@ -47,7 +49,11 @@ public class BiobuzzTeleOp extends OpMode {
         }
 
         intake.init(hardwareMap);
-        flywheel.init(hardwareMap);
+
+        shooter.init(hardwareMap);
+        hood.init(hardwareMap);
+        intake.setIntakeLift(0);
+        intake.setProbe(probeUp);
 
         intake.setGates(gateClose);
 
@@ -62,8 +68,8 @@ public class BiobuzzTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        intake.updateIntakeDetection();
-        intake.preventOverfill();
+        //intake.updateIntakeDetection();
+        //intake.preventOverfill();
 
         follower.update();
         Pose robotPose = follower.pose();
@@ -76,13 +82,13 @@ public class BiobuzzTeleOp extends OpMode {
         double heading = robotPose.heading();
 
 // Select the goal based on the robot's equivalent Red-side position.
-        double hiveX = 84;
+        double hiveX = 60;
         double hiveY;
 
         if (robotY < 70.75) {
-            hiveY = 58;
+            hiveY = 52;
         } else {
-            hiveY = 83.5;
+            hiveY = 88;
         }
 
         double deltaX = hiveX - robotX;
@@ -110,16 +116,15 @@ public class BiobuzzTeleOp extends OpMode {
         }
 
 //------------------- DRIVER CODE -------------------
-
         double forward = -gamepad1.left_stick_y;
-        double strafe = gamepad1.left_stick_x;
-        double rotate = gamepad1.right_stick_x;
+        double strafe = -gamepad1.left_stick_x;
+        double rotate = -gamepad1.right_stick_x;
 
         double slowDrive = 0.25;
 
         DrivePowers powers;
 
-        if (gamepad1.right_trigger > 0.3) {
+        if (gamepad1.right_trigger > 0) {
             // Slow driving
             powers = ManualDrive.fieldCentric(
                     forward * slowDrive,
@@ -148,8 +153,8 @@ public class BiobuzzTeleOp extends OpMode {
         ManualDrive.driveOrHold(follower, powers);
 
         //------------------LAUNCHER CODE---------------------
-        flywheel.setPollenFlywheelSpeed(Shooter.pollenFlywheelInterpolated(targetDistance)+flywheelOffset);
-        flywheel.setNectarFlywheelSpeed(Shooter.nectarFlywheelInterpolated(targetDistance)+flywheelOffset);
+        shooter.setPollenFlywheelSpeed(Shooter.pollenFlywheelInterpolated(targetDistance)+flywheelOffset);
+        shooter.setNectarFlywheelSpeed(Shooter.nectarFlywheelInterpolated(targetDistance)+flywheelOffset);
 
         hood.setPollenHoodPos(Shooter.pollenHoodInterpolated(targetDistance));
         hood.setNectarHoodPos(Shooter.nectarHoodInterpolated(targetDistance));
@@ -161,15 +166,19 @@ public class BiobuzzTeleOp extends OpMode {
         }
 
         intake.runTransfers(1.0);
+        intake.runIntake(1.0);
+        intake.setIntakeLift(0.55);
 
-        if (gamepad1.right_trigger > 0.3) {
-            intake.runIntake(1.0);
+        if (gamepad1.circle) {
+            intake.setGates(gateOpen);
         } else {
-            intake.runIntake(0.5);
+            intake.setGates(gateClose);
         }
 
-        if (gamepad1.b) {
-            intake.setGates(gateOpen);
+        if (gamepad1.right_bumper) {
+            intake.setProbe(probeDown);
+        } else {
+            intake.setProbe(probeUp);
         }
 
         telemetry.addData("Distance to Goal", targetDistance);
@@ -180,5 +189,10 @@ public class BiobuzzTeleOp extends OpMode {
         telemetry.addData("Flywheel Offset", flywheelOffset);
         telemetry.addData("kP Value", kP);
         telemetry.addData("Target Offset", targetAngleOffset);
+    }
+
+    @Override
+    public void stop() {
+        PoseHolder.savedPose = null;
     }
 }
