@@ -51,9 +51,9 @@ public class BiobuzzTeleOp extends OpMode {
         intake.init(hardwareMap);
 
         shooter.init(hardwareMap);
+        shooter.setIntake(intake);
+
         hood.init(hardwareMap);
-        intake.setIntakeLift(0);
-        intake.setProbe(probeUp);
 
         intake.setGates(gateClose);
 
@@ -171,6 +171,8 @@ public class BiobuzzTeleOp extends OpMode {
         hood.setPollenHoodPos(Shooter.pollenHoodInterpolated(targetDistance));
         hood.setNectarHoodPos(Shooter.nectarHoodInterpolated(targetDistance));
 
+        shooter.updateFlywheels();
+
         if (gamepad2.rightBumperWasPressed() && flywheelOffset < 100) {
             flywheelOffset += 10;
         } else if (gamepad2.leftBumperWasPressed() &&  flywheelOffset > 0) {
@@ -179,12 +181,12 @@ public class BiobuzzTeleOp extends OpMode {
 
         intake.runTransfers(1.0);
 
-        if (gamepad1.dpadUpWasPressed()) {
+        if (gamepad1.dpad_up) {
             intake.runIntake(-0.5);
             intake.setIntakeLift(0.0);
         } else {
             intake.runIntake(1.0);
-            intake.setIntakeLift(0.55);
+            intake.setIntakeLift(0.45);
         }
 
         if (gamepad1.circle) {

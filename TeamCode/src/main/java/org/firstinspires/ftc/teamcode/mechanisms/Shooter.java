@@ -47,7 +47,7 @@ public class Shooter {
     private double flywheelMaxSpinupTime = .25;
 
     //---------THROUGHPUT CONSTANTS----------
-    private double shotFeedTime = .5; // tune this
+    private double shotFeedTime = .75; // tune this
 
 
     public void init(HardwareMap hwMap) {
@@ -170,6 +170,11 @@ public class Shooter {
 
     public void setNectarFlywheelSpeed(double speed) {
         nectarTargetVelocity = speed;
+    }
+
+    public void updateFlywheels() {
+        pollenFlywheel.setVelocity(pollenTargetVelocity);
+        nectarFlywheel.setVelocity(nectarTargetVelocity);
     }
 
     //Interpolation for flywheels and corresponding hoods. Use data from Desmos, input distance to goals and working values using the flywheel interpolation tuner

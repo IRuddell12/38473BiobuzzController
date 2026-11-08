@@ -61,7 +61,6 @@ public class Intake {
 
         intakeLift = hwMap.get(Servo.class, "intake_lift");
         intakeLift.scaleRange(0, 0.6);
-        intakeLift.setPosition(0);
 
         probe = hwMap.get(Servo.class, "probe");
         probe.scaleRange(probeDown, probeUp);

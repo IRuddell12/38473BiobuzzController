@@ -42,20 +42,20 @@ public class BiobuzzAuto extends OpMode {
     private final PoseFactory p = PoseFactory.degrees();
 
     private final Pose startPose = p.of(57.58, 5.80, 90);
-    private final Pose flower1Pose = p.of(14.42, 43, 0);
+    private final Pose flower1Pose = p.of(13, 43.81, 0);
     private final Pose startToFlower1Control = p.of(30, 50, 0);
-    private final Pose startToFlower1_Segment1Start = p.of(14.42, 43, 90);
-    private final Pose startToFlower1_Segment1End = p.of(14.42, 43, 0);
-    private final Pose startToFlower1_Segment2Start = p.of(14.42, 43, 0);
-    private final Pose startToFlower1_Segment2End = p.of(14.42, 43, 0);
+    private final Pose startToFlower1_Segment1Start = p.of(13, 43.81, 90);
+    private final Pose startToFlower1_Segment1End = p.of(13, 43.81, 0);
+    private final Pose startToFlower1_Segment2Start = p.of(13, 43.81, 0);
+    private final Pose startToFlower1_Segment2End = p.of(13, 43.81, 0);
 
 
     //private final Pose shootPose1 = p.of(58, 24, 90);
-    private final Pose shootPose2 = p.of(58, 120, 270);
+    private final Pose shootPose2 = p.of(56.22, 119.41, 270);
     private final Pose flower1ToShoot2Control1 = p.of(34, 48, 0);
     private final Pose flower1ToShoot2Control2 = p.of(18, 110, 0);
 
-    private final Pose shoot2ToFlower2Control = p.of(47, 118, 0);
+    private final Pose shoot2ToFlower2Control = p.of(49, 122, 0);
 
     /*private final Pose shootToShoot_Segment1Start = p.of(58, 24, 90);
     private final Pose ShootToShoot_Segment1End = p.of(58, 24, 180);
@@ -65,16 +65,16 @@ public class BiobuzzAuto extends OpMode {
     private final Pose shootToShoot_Segment3End = p.of(58, 24, 270);
      */
 
-    private final Pose flower2Pose = p.of(55, 120, 270);
+    private final Pose flower2Pose = p.of(47, 126, 270);
     private final Pose parkPose = p.of(19.11, 116.60, 90);
 
-    private final double flowerIntakeTimeout = 2500; //This is MS, 1000 for 1 second
+    private final double flowerIntakeTimeout = 2000; //This is MS, 1000 for 1 second
 
-    private double pollenHoodAngle = 0.35;
+    private double pollenHoodAngle = 0.3;
     private double nectarHoodAngle = 0.75;
 
     double intakeLiftUp = 0;
-    double intakeLiftDown = 0.52;
+    double intakeLiftDown = 0.45;
     int probeUp = 0;
     int probeDown = 1;
 
@@ -232,7 +232,8 @@ public class BiobuzzAuto extends OpMode {
 
     private Command shootPreloads() {
         return sequential(
-                setFlywheelSpeeds(shooter, 1280, 0),
+                setFlywheelSpeeds(shooter, 1290, 0),
+                waitMs(500),
                 shoot(shooter, 4));
     }
 
@@ -247,19 +248,21 @@ public class BiobuzzAuto extends OpMode {
                 waitMs(flowerIntakeTimeout),
 
                 parallel(
-                        setProbeAtProgress(follower, intake, 0.3, probeUp),
-                        setHoodAngles(nectarHoodAngle, 0.4),
+                        setProbe(intake, probeUp),
+                        setHoodAngles(nectarHoodAngle, 0.36),
                         follow(follower, flower1ToShoot2())
                 ),
-                setFlywheelSpeeds(shooter, 1250, 0),
+                setFlywheelSpeeds(shooter, 1245, 0),
+                setHoodAngles(nectarHoodAngle, 0.45),
                 shoot(shooter, 4)
         );
     }
 
     private Command runCycle2() {
         return sequential(
+                setProbe(intake, probeDown),
+                waitMs(500),
                 parallel(
-                        setProbe(intake, probeDown),
                         follow(follower, shoot2ToFlower2())
                 ),
 
@@ -267,17 +270,17 @@ public class BiobuzzAuto extends OpMode {
                 waitMs(flowerIntakeTimeout),
 
                 follow(follower, flower2ToShoot2()),
-                setHoodAngles(nectarHoodAngle, 0.4),
 
                 parallel(
                         shoot(shooter, 4),
-                        setProbe(intake, probeDown)
+                        setProbe(intake, probeUp)
                 )
         );
     }
 
     private Command park() {
         return parallel(
+
                 follow(follower, shoot2ToPark())
         );
     }
